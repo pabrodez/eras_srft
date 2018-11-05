@@ -36,7 +36,23 @@ rem_col <- function(x) {
 }
 
 df_srft <- rem_row(df_srft)
-rem_col <- rem_col(df_srft)
+df_srft <- rem_col(df_srft)
+
+# NAs plot to check visually
+plotNa <- function(dataFrame) {
+        tempDf <- as.data.frame(ifelse(is.na(dataFrame), 0, 1))
+        tempDf <- tempDf[, order(colSums(tempDf))]
+        tempData <- expand.grid(list(x = 1:nrow(tempDf), y = colnames(tempDf)))
+        tempData$v <- as.vector(as.matrix(tempDf))
+        tempData <- data.frame(x = unlist(tempData$x), y = unlist(tempData$y), v = unlist(tempData$v))
+        ggplot(tempData) + geom_tile(aes(x=x, y=y, fill=factor(v))) +
+                scale_fill_manual(values=c("white", "black"), name="Missing value\n1=No, 0=Yes") +
+                theme_light() + ylab("") + xlab("Rows of data set") + ggtitle("")
+        
+}
+
+adults_nas <- plotNa(df_srft)
+
 
 
 
