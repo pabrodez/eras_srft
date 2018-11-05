@@ -35,4 +35,13 @@ rem_col <- function(x) {
         x[, colSums(is.na(x)) != nrow(x)]
 }
 
+df_srft <- rem_row(df_srft)
+rem_col <- rem_col(df_srft)
+
+
+
+
+
+
+
 
