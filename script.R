@@ -19,6 +19,20 @@ if (!dir.exists("./plots")) dir.create("./plots")
 # Name file as srft.xlsx and move manually to /data
 
 list.files("./data", pattern = "eras_srft.xlsx")
-ds_srft <-  read_excel("./data/srft.xls", sheet = 6, n_max = 300, range = cell_cols("E:BR")),
+df_srft <-  read_excel("./data/srft.xls", sheet = 6, n_max = 300, range = cell_cols("E:BR")),
                         col_types = TRUE, col_types = "text", trim_ws = TRUE)
+
+# To lower caps
+df_srft[] <- lapply(df_srft, tolower)
+
+# Remove rows with empty values in all columns
+rem_row <- function(x) {
+        x[rowSums(is.na(x)) != ncol(x), ]
+}
+
+# Remove columns with empty values in all rows
+rem_col <- function(x) {
+        x[, colSums(is.na(x)) != nrow(x)]
+}
+
 
