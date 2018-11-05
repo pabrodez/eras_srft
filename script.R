@@ -48,7 +48,8 @@ rem_col <- function(x) {
 df_srft <- rem_row(df_srft)
 df_srft <- rem_col(df_srft)
 
-
+# Set fields types
+df_srft$admission_date <- lubridate::dmy(df_srft$admission_date)
 
 
 
