@@ -1,5 +1,5 @@
 # load libraries
-library(xlsx)
+library(readxlsx)
 library(tidyverse)
 library(lubridate)
 library(data.table)
@@ -15,8 +15,9 @@ library(viridis)
 # Create destination folders
 if (!dir.exists("./data")) dir.create("./data")
 if (!dir.exists("./plots")) dir.create("./plots")
+# Anonymised spreadsheet
 # Name file as srft.xlsx and move manually to /data
 
-list.files("./data", pattern = "srft.xlsx")
-ds_srft <-  read.xlsx("./data/srft.xls", sheetIndex = 6, startRow = 1, header = TRUE, 
-                         colClasses = rep("character", 50), stringsAsFactors = FALSE)
+list.files("./data", pattern = "eras_srft.xlsx")
+ds_srft <-  read_excel("./data/srft.xls", sheet = 6, range = cell_cols("E:BR")) col_types = TRUE, 
+                        col_types = "text", trim_ws = TRUE)
