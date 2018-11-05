@@ -19,5 +19,6 @@ if (!dir.exists("./plots")) dir.create("./plots")
 # Name file as srft.xlsx and move manually to /data
 
 list.files("./data", pattern = "eras_srft.xlsx")
-ds_srft <-  read_excel("./data/srft.xls", sheet = 6, range = cell_cols("E:BR")) col_types = TRUE, 
-                        col_types = "text", trim_ws = TRUE)
+ds_srft <-  read_excel("./data/srft.xls", sheet = 6, n_max = 300, range = cell_cols("E:BR")),
+                        col_types = TRUE, col_types = "text", trim_ws = TRUE)
+
