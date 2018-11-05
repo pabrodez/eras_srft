@@ -20,7 +20,7 @@ if (!dir.exists("./plots")) dir.create("./plots")
 
 list.files("./data", pattern = "eras_srft.xlsx")
 df_srft <-  read_excel("./data/srft.xls", sheet = 6, n_max = 300, range = cell_cols("E:BR")),
-                        col_types = TRUE, col_types = "text", trim_ws = TRUE)
+                        col_types = TRUE, col_types = "text", trim_ws = TRUE, na = "Not done")
 
 # To lower caps
 df_srft[] <- lapply(df_srft, tolower)
@@ -37,6 +37,25 @@ rem_col <- function(x) {
 
 df_srft <- rem_row(df_srft)
 df_srft <- rem_col(df_srft)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # NAs plot to check visually
 plotNa <- function(dataFrame) {
