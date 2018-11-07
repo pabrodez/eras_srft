@@ -16,13 +16,13 @@ library(viridis)
 if (!dir.exists("./data")) dir.create("./data")
 if (!dir.exists("./plots")) dir.create("./plots")
 # Anonymised spreadsheet
-# Name file as srft.xlsx and move manually to /data
-
-list.files("./data", pattern = "eras_srft.xlsx")
-df_srft <-  read_excel("./data/srft.xls", sheet = 6, n_max = 300, range = cell_cols("E:BR")),
+# Name file as eras_srft.xlsx and move manually to /data
+ 
+data_path <- list.files("./data", pattern = "eras_srft.xlsx", full.names = TRUE, ignore.case = TRUE)[[1]]
+df_srft <-  read_excel(data_path, sheet = 6, range = cell_cols("E1:BR300")),
                         col_types = TRUE, col_types = "text", trim_ws = TRUE)
 
-# To lower caps
+# lower caps
 df_srft[] <- lapply(df_srft, tolower)
 
 # Missing values
@@ -65,6 +65,7 @@ df_srft$albumin <- as.numeric(df_srft$albumin)
 df_srft$creatinine_base <- as.numeric(df_srft$creatinine_base)
 df_srft$creatinine_high <- as.numeric(df_srft$creatinine_high)
 
+# some dates 
 
 
 
