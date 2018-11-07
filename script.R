@@ -49,15 +49,21 @@ df_srft <- rem_row(df_srft)
 df_srft <- rem_col(df_srft)
 
 # Set fields types
+# dates and times
 df_srft$admission_date <- lubridate::dmy(df_srft$admission_date)
 df_srft$surgery_date <- lubridate::dmy(df_srft$surgery_date)
 df_srft$discharge_date <- lubridate::dmy(df_srft$discharge_date)
 df_srft$date_15 <- lubridate::dmy(df_srft$date_15)
-df_srft$date_15 <- lubridate::hms(df_srft[!grep("$hour[s]", df_srft$date_15, values = FALSE, ignore.case = TRUE), ]$date_15)
-
-df_srft$hospital_stay <- as.integer(df_srft$hospital_stay
-
-
+df_srft$surgery_duration <- lubridate::hms(df_srft[!grep("$hour", df_srft$surgery_duration, values = FALSE, ignore.case = TRUE), ]$surgery_duration)
+# days
+df_srft$hospital_stay <- as.numeric(df_srft$hospital_stay)
+# biomarkers
+df_srft$hb <- as.numeric(df_srft$hb)
+df_srft$creatinine <- as.numeric(df_srft$creatinine)
+df_srft$albumin <- as.numeric(df_srft$albumin)
+df_srft$albumin <- as.numeric(df_srft$albumin)
+df_srft$creatinine_base <- as.numeric(df_srft$creatinine_base)
+df_srft$creatinine_high <- as.numeric(df_srft$creatinine_high)
 
 
 
