@@ -53,7 +53,7 @@ df_srft$admission_date <- lubridate::dmy(df_srft$admission_date)
 df_srft$surgery_date <- lubridate::dmy(df_srft$surgery_date)
 df_srft$discharge_date <- lubridate::dmy(df_srft$discharge_date)
 df_srft$date_15 <- lubridate::dmy(df_srft$date_15)
-df_srft$date_15 <- lubridate::hms(df_srft[grep("$hour[s]", df_srft$date_15, values = FALSE, ignore.case = TRUE), ]$date_15)
+df_srft$date_15 <- lubridate::hms(df_srft[!grep("$hour[s]", df_srft$date_15, values = FALSE, ignore.case = TRUE), ]$date_15)
 
 df_srft$hospital_stay <- as.integer(df_srft$hospital_stay
 
