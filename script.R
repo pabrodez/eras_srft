@@ -7,20 +7,36 @@ library(readxl)
 if (!dir.exists("./data")) dir.create("./data")
 if (!dir.exists("./plots")) dir.create("./plots")
 
-# Save spreadsheet as workbook (.xlsx), name file as eras_srft and move manually to /data
+# Open with google spreadsheet, format columns properly
+# save as .csv collated sheet, name file as eras_srft and move manually to /data
 # remember to remove unpopulated rows
 na_list <- c(
-  0, "0", "", "NA", "na", "n/a", "not known/not recorded",
-  "not measured", "Not Measured", "none measured", "None Measured", "not done", "Not Done",
-  "n/d", "Not Recorded", "not recorded", "u/k", "unknown"
+        0, "0", "", "NA", "na", "n/a", "not known/not recorded",
+        "not measured", "Not Measured", "none measured", "None Measured", "not done", "Not Done",
+        "n/d", "Not Recorded", "not recorded", "u/k", "unknown"
 )
-
-data_path <- list.files("./data", pattern = "eras_srft", full.names = TRUE, ignore.case = TRUE)[[1]]
-df_srft <- read_xlsx(data_path, sheet = 6, n_max = 250)
-# df_srft <- read.csv(data_path, strip.white = TRUE, nrows = 250, stringsAsFactors = FALSE, encoding = "UTF-8")
+# change pattern arg to "\\.xlsx" if needed
+data_path <- list.files("./data", pattern = "\\.csv", full.names = TRUE, ignore.case = TRUE)[[1]]
+# df_srft <- read_xlsx(data_path, sheet = 6, n_max = 250)
+df_srft <- read.csv(data_path, strip.white = TRUE, nrows = 250, stringsAsFactors = FALSE)
 # lower caps
 df_srft[] <- lapply(df_srft, tolower)
-# n/d is not removed in na argument. Try this maybe:
+# visualize missing data before replacing miss values with NA
+# plotmiss <- function(dataFrame) {
+#         tempDf <- as.data.frame(lapply(df_srft, function(x) ifelse(x %in% na_list, 0, 1)))
+#         tempDf <- tempDf[, order(colSums(tempDf))]
+#         tempData <- expand.grid(list(x = 1:nrow(tempDf), y = colnames(tempDf)))
+#         tempData$v <- as.vector(as.matrix(tempDf))
+#         tempData <- data.frame(x = unlist(tempData$x), y = unlist(tempData$y), v = unlist(tempData$v))
+#         ggplot(tempData) + geom_tile(aes(x=x, y=y, fill=factor(v))) +
+#                 scale_fill_manual(values=c("white", "black"), name="Missing value\n1=No, 0=Yes") +
+#                 theme_light() + ylab("") + xlab("Rows of data set") + ggtitle("")
+#         
+# }
+# plotNa(df_srft)
+# ggsave(filename = "df_1.png", path = "./plots", device = "png", units = "cm", height = 25, width = 20)
+
+# replace missing values with NA
 df_srft[] <- lapply(df_srft, function(x) ifelse(x %in% na_list, NA, x))
 
 # Remove rows with empty values in all columns
@@ -35,30 +51,43 @@ rem_col <- function(x) {
 
 df_srft <- rem_row(df_srft)
 df_srft <- rem_col(df_srft)
+# plot NA again
+# plotNa <- function(dataFrame) {
+#         tempDf <- as.data.frame(ifelse(is.na(dataFrame), 0, 1))
+#         tempDf <- tempDf[, order(colSums(tempDf))]
+#         tempData <- expand.grid(list(x = 1:nrow(tempDf), y = colnames(tempDf)))
+#         tempData$v <- as.vector(as.matrix(tempDf))
+#         tempData <- data.frame(x = unlist(tempData$x), y = unlist(tempData$y), v = unlist(tempData$v))
+#         ggplot(tempData) + geom_tile(aes(x=x, y=y, fill=factor(v))) +
+#                 scale_fill_manual(values=c("white", "black"), name="Missing value\n1=No, 0=Yes") +
+#                 theme_light() + ylab("") + xlab("Rows of data set") + ggtitle("")
+#         
+# }
+# plotNa(df_srft)
+# ggsave(filename = "df_2.png", path = "./plots", device = "png", units = "cm", height = 25, width = 20)
 
 # Set fields types
 # dates and times
 # df_srft$discharge_date <- as.numeric(df_srft$discharge_date)
 # df_srft$discharge_date <- as.Date(df_srft$discharge_date, origin = "1899-12-30")
-df_srft$discharge_date <- as.Date(df_srft$discharge_date, format = "%Y-%m-%d")
+df_srft$discharge_date <- as.Date(df_srft$discharge_date, format = "%d/%m/%Y")
 
 # df_srft$admission_date <- as.numeric(df_srft$admission_date)
 # df_srft$admission_date <- as.Date(df_srft$admission_date, origin = "1899-12-30")
-df_srft$admission_date <- as.Date(df_srft$admission_date, format = "%Y-%m-%d")
+df_srft$admission_date <- as.Date(df_srft$admission_date, format = "%d/%m/%Y")
 
 # df_srft$surgery_date <- as.numeric(df_srft$surgery_date)
 # df_srft$surgery_date <- as.Date(df_srft$surgery_date, origin = "1899-12-30")
-df_srft$surgery_date <- as.Date(df_srft$surgery_date, format = "%Y-%m-%d")
+df_srft$surgery_date <- as.Date(df_srft$surgery_date, format = "%d/%m/%Y")
 
 # df_srft$date_15 <- as.numeric(df_srft$date_15)
 # df_srft[df_srft$date_15 == 0, ]$date_15 <- NA
-df_srft$date_15 <- as.Date(df_srft$date_15, format = "%Y-%m-%d")
+df_srft$date_15 <- as.Date(df_srft$date_15, format = "%d/%m/%Y")
 
-df_srft$date_school <- as.Date(df_srft$date_school, format = "%Y-%m-%d")
+df_srft$date_school <- as.Date(df_srft$date_school, format = "%d/%m/%Y")
 
-# df_srft[df_srft$surgery_duration == 0, ]$surgery_duration <- NA
-df_srft[grep("hour[s]$", df_srft$surgery_duration), ]$surgery_duration <- NA
-df_srft$surgery_duration <- lubridate::ymd_hms(df_srft$surgery_duration)
+# df_srft[grep("hour[s]$", df_srft$surgery_duration), ]$surgery_duration <- NA
+df_srft$surgery_duration <- lubridate::hms(df_srft$surgery_duration)
 df_srft$surgery_duration <- lubridate::time_length(df_srft$surgery_duration, unit = "minutes")
 
 # days
@@ -70,6 +99,18 @@ df_srft$hospital_stay <- ifelse(df_srft$hospital_stay < 0, NA, df_srft$hospital_
 # df_srft[lubridate::year(df_srft$surgery_date) < 2017, ]$surgery_date <- NA
 # df_srft[lubridate::year(df_srft$discharge_date) < 2017, ]$discharge_date <- NA
 # df_srft[lubridate::year(df_srft$date_15) < 2017, ]$date_15 <- NA
+
+# check year
+# ifelse doesn't return dates as numeric. dplyr::if_else does the trick. 
+# true and false args must be same type, that's why as.Date(NA)
+df_srft[] <- lapply(df_srft, function(x) {
+  if (class(x) == "Date") {
+    dplyr::if_else(lubridate::year(x) < 2018, as.Date(NA), x)
+  }
+  else {
+    (x)
+  }
+})
 
 # biomarkers
 df_srft$hb <- sub(",", ".", df_srft$hb, fixed = TRUE)
@@ -119,8 +160,6 @@ anae_treat_vec <- unlist(strsplit(df_srft$anaemia_treat, ",\\s"))
 # df_srft %>% select("anaemia_treat", "anaemia_treat2") %>% gather()
 
 sapply(df_srft, unique)
-
-
 
 
 
