@@ -1,13 +1,14 @@
 library(readr)
 library(tidyverse)
 library(lubridate)
-library(stringr)
+library(readxl)
 
 # Create destination folders
 if (!dir.exists("./data")) dir.create("./data")
 if (!dir.exists("./plots")) dir.create("./plots")
 
-# Name file as eras_srft and move manually to /data
+# Save spreadsheet as workbook (.xlsx), name file as eras_srft and move manually to /data
+# remember to remove unpopulated rows
 na_list <- c(
   0, "0", "", "NA", "na", "n/a", "not known/not recorded",
   "not measured", "Not Measured", "none measured", "None Measured", "not done", "Not Done",
@@ -15,7 +16,8 @@ na_list <- c(
 )
 
 data_path <- list.files("./data", pattern = "eras_srft", full.names = TRUE, ignore.case = TRUE)[[1]]
-df_srft <- read_csv(data_path, trim_ws = TRUE, na = na_list, n_max = 300, col_types = cols(.default = "c"))
+df_srft <- read_xlsx(data_path, sheet = 6, n_max = 250)
+# df_srft <- read.csv(data_path, strip.white = TRUE, nrows = 250, stringsAsFactors = FALSE, encoding = "UTF-8")
 # lower caps
 df_srft[] <- lapply(df_srft, tolower)
 # n/d is not removed in na argument. Try this maybe:
@@ -38,25 +40,25 @@ df_srft <- rem_col(df_srft)
 # dates and times
 # df_srft$discharge_date <- as.numeric(df_srft$discharge_date)
 # df_srft$discharge_date <- as.Date(df_srft$discharge_date, origin = "1899-12-30")
-df_srft$discharge_date <- as.Date(df_srft$discharge_date, format = "%m/%d/%Y")
+df_srft$discharge_date <- as.Date(df_srft$discharge_date, format = "%Y-%m-%d")
 
 # df_srft$admission_date <- as.numeric(df_srft$admission_date)
 # df_srft$admission_date <- as.Date(df_srft$admission_date, origin = "1899-12-30")
-df_srft$admission_date <- as.Date(df_srft$admission_date, format = "%m/%d/%Y")
+df_srft$admission_date <- as.Date(df_srft$admission_date, format = "%Y-%m-%d")
 
 # df_srft$surgery_date <- as.numeric(df_srft$surgery_date)
 # df_srft$surgery_date <- as.Date(df_srft$surgery_date, origin = "1899-12-30")
-df_srft$surgery_date <- as.Date(df_srft$surgery_date, format = "%m/%d/%Y")
+df_srft$surgery_date <- as.Date(df_srft$surgery_date, format = "%Y-%m-%d")
 
 # df_srft$date_15 <- as.numeric(df_srft$date_15)
 # df_srft[df_srft$date_15 == 0, ]$date_15 <- NA
-df_srft$date_15 <- as.Date(df_srft$date_15, format = "%m/%d/%Y")
+df_srft$date_15 <- as.Date(df_srft$date_15, format = "%Y-%m-%d")
 
-df_srft$date_school <- as.Date(df_srft$date_school, format = "%m/%d/%Y")
+df_srft$date_school <- as.Date(df_srft$date_school, format = "%Y-%m-%d")
 
 # df_srft[df_srft$surgery_duration == 0, ]$surgery_duration <- NA
 df_srft[grep("hour[s]$", df_srft$surgery_duration), ]$surgery_duration <- NA
-df_srft$surgery_duration <- lubridate::hms(df_srft$surgery_duration)
+df_srft$surgery_duration <- lubridate::ymd_hms(df_srft$surgery_duration)
 df_srft$surgery_duration <- lubridate::time_length(df_srft$surgery_duration, unit = "minutes")
 
 # days
@@ -117,7 +119,6 @@ anae_treat_vec <- unlist(strsplit(df_srft$anaemia_treat, ",\\s"))
 # df_srft %>% select("anaemia_treat", "anaemia_treat2") %>% gather()
 
 sapply(df_srft, unique)
-
 
 
 
