@@ -103,6 +103,7 @@ df_srft$hospital_stay <- ifelse(df_srft$hospital_stay < 0, NA, df_srft$hospital_
 # check year
 # ifelse doesn't return dates as numeric. dplyr::if_else does the trick. 
 # true and false args must be same type, that's why as.Date(NA)
+
 df_srft[] <- lapply(df_srft, function(x) {
   if (class(x) == "Date") {
     dplyr::if_else(lubridate::year(x) < 2018, as.Date(NA), x)
@@ -113,29 +114,29 @@ df_srft[] <- lapply(df_srft, function(x) {
 })
 
 # biomarkers
-df_srft$hb <- sub(",", ".", df_srft$hb, fixed = TRUE)
+# df_srft$hb <- sub(",", ".", df_srft$hb, fixed = TRUE) 
 df_srft$hb <- as.numeric(df_srft$hb)
 
-df_srft$creatinine <- sub(",", ".", df_srft$creatinine, fixed = TRUE)
+# df_srft$creatinine <- sub(",", ".", df_srft$creatinine, fixed = TRUE)
 df_srft$creatinine <- as.numeric(df_srft$creatinine)
 
-df_srft$albumin <- sub(",", ".", df_srft$albumin, fixed = TRUE)
+# df_srft$albumin <- sub(",", ".", df_srft$albumin, fixed = TRUE)
 df_srft$albumin <- as.numeric(df_srft$albumin)
 
-df_srft$creatinine_base <- sub(",", ".", df_srft$creatinine_base, fixed = TRUE)
+# df_srft$creatinine_base <- sub(",", ".", df_srft$creatinine_base, fixed = TRUE)
 df_srft$creatinine_base <- as.numeric(df_srft$creatinine_base)
 
-df_srft$creatinine_high <- sub(",", ".", df_srft$creatinine_high, fixed = TRUE)
+# df_srft$creatinine_high <- sub(",", ".", df_srft$creatinine_high, fixed = TRUE)
 df_srft$creatinine_high <- as.numeric(df_srft$creatinine_high)
 
-df_srft$creatinine_high <- sub(",", ".", df_srft$creatinine_high, fixed = TRUE)
+# df_srft$creatinine_high <- sub(",", ".", df_srft$creatinine_high, fixed = TRUE)
 df_srft$creatinine_high <- as.numeric(df_srft$creatinine_high)
 
-df_srft$troponin <- sub(",", ".", df_srft$troponin, fixed = TRUE)
+# df_srft$troponin <- sub(",", ".", df_srft$troponin, fixed = TRUE)
 df_srft$troponin <- sub("<", "-", df_srft$troponin)
 df_srft$troponin <- as.numeric(df_srft$troponin)
 
-df_srft$troponin_7 <- sub(",", ".", df_srft$troponin_7, fixed = TRUE)
+# df_srft$troponin_7 <- sub(",", ".", df_srft$troponin_7, fixed = TRUE)
 df_srft$troponin_7 <- sub("<", "-", df_srft$troponin_7, fixed = TRUE)
 df_srft$troponin_7 <- as.numeric(df_srft$troponin_7)
 
@@ -160,10 +161,3 @@ anae_treat_vec <- unlist(strsplit(df_srft$anaemia_treat, ",\\s"))
 # df_srft %>% select("anaemia_treat", "anaemia_treat2") %>% gather()
 
 sapply(df_srft, unique)
-
-
-
-
-
-
-
