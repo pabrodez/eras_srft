@@ -7,6 +7,8 @@ library(readxl)
 if (!dir.exists("./data")) dir.create("./data")
 if (!dir.exists("./plots")) dir.create("./plots")
 
+# download.file("https://raw.githubusercontent.com/pabrodez/eras_srft/master/data/eras_srft.csv",
+#               destfile = "./data/eras_srft.csv", method = "curl")
 
 # file.rename(from = "eras_srft.csv", to = "./data/eras_srft.csv")
 
