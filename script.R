@@ -7,6 +7,8 @@ library(readxl)
 if (!dir.exists("./data")) dir.create("./data")
 if (!dir.exists("./plots")) dir.create("./plots")
 
+file.rename(from = "eras_srft.csv", to = "./data/eras_srft.csv")
+
 # Open with google spreadsheet, format columns properly
 # save as .csv collated sheet, name file as eras_srft and move manually to /data
 # remember to remove unpopulated rows
