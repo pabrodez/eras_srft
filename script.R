@@ -7,7 +7,8 @@ library(readxl)
 if (!dir.exists("./data")) dir.create("./data")
 if (!dir.exists("./plots")) dir.create("./plots")
 
-file.rename(from = "eras_srft.csv", to = "./data/eras_srft.csv")
+
+# file.rename(from = "eras_srft.csv", to = "./data/eras_srft.csv")
 
 # Open with google spreadsheet, format columns properly
 # save as .csv collated sheet, name file as eras_srft and move manually to /data
@@ -154,7 +155,7 @@ df_srft$anaesthesia <- sapply(strsplit(df_srft$anaesthesia, ",\\s"), `[`, 1)
 df_srft$tidal_vol <- sub(",", ".", df_srft$tidal_vol, fixed = TRUE)
 
 # vector with all anaemia treatments 
-anae_treat_vec <- unlist(strsplit(df_srft$anaemia_treat, ",\\s"))
+# anae_treat_vec <- unlist(strsplit(df_srft$anaemia_treat, ",\\s"))
 # also:
 # df_srft$anaemia_treat2 <- vector(mode = "character", length = nrow(df_srft))
 # df_srft$anaemia_treat2 <- sapply(strsplit(df_srft$anaemia_treat, ",\\s"), `[`, 2)
@@ -162,4 +163,4 @@ anae_treat_vec <- unlist(strsplit(df_srft$anaemia_treat, ",\\s"))
 # 
 # df_srft %>% select("anaemia_treat", "anaemia_treat2") %>% gather()
 
-sapply(df_srft, unique)
+
