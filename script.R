@@ -3,8 +3,8 @@ library(tidyverse)
 library(lubridate)
 library(readxl)
 library(ggthemes)
-library(ggthemr)
 
+# Sys.setlocale("LC_ALL", "uk")
 # Create destination folders
 if (!dir.exists("./data")) dir.create("./data")
 if (!dir.exists("./plots")) dir.create("./plots")
@@ -16,9 +16,9 @@ download.file(file_url, destfile = "./data/eras_srft.csv", method = "auto")
 # save as .csv collated sheet, name file as eras_srft and move manually to /data
 # remember to remove unpopulated rows
 na_list <- c(
-  0, "0", "", "NA", "na", "n/a", "<NA>", "not known/not recorded",
-  "not measured", "Not Measured", "none measured", "None Measured", "not done", "Not Done",
-  "n/d", "Not Recorded", "not recorded", "u/k", "unknown"
+        0, "0", "", "NA", "na", "n/a", "<NA>", "not known/not recorded",
+        "not measured", "Not Measured", "none measured", "None Measured", "not done", "Not Done",
+        "n/d", "Not Recorded", "not recorded", "u/k", "unknown"
 )
 # .csv encoding is WINDOWS-1252. Change to UTF-8
 data_path <- list.files("./data", pattern = "\\.csv", full.names = TRUE, ignore.case = TRUE)[[1]]
@@ -41,15 +41,15 @@ vars_adm <- c("gm_eras_ele", "eras", "pqip_consent", "discharge_loc", "surgery_d
 
 # visualize missing data before replacing miss values with NA
 plotmiss <- function(dataFrame, na_values) {
-  tempDf <- as.data.frame(lapply(dataFrame, function(x) ifelse(x %in% na_values, 0, 1)))
-  tempDf <- tempDf[, order(colSums(tempDf))]
-  tempData <- expand.grid(list(x = 1:nrow(tempDf), y = colnames(tempDf)))
-  tempData$v <- as.vector(as.matrix(tempDf))
-  tempData <- data.frame(x = unlist(tempData$x), y = unlist(tempData$y), v = unlist(tempData$v))
-  ggplot(tempData) + geom_tile(aes(x=x, y=y, fill=factor(v))) +
-    scale_fill_manual(values=c("white", "black"), name="Not measured\n1=No, 0=Yes") +
-    theme_light() + ylab("") + xlab("Rows of data set") + ggtitle("")
-  
+        tempDf <- as.data.frame(lapply(dataFrame, function(x) ifelse(x %in% na_values, 0, 1)))
+        tempDf <- tempDf[, order(colSums(tempDf))]
+        tempData <- expand.grid(list(x = 1:nrow(tempDf), y = colnames(tempDf)))
+        tempData$v <- as.vector(as.matrix(tempDf))
+        tempData <- data.frame(x = unlist(tempData$x), y = unlist(tempData$y), v = unlist(tempData$v))
+        ggplot(tempData) + geom_tile(aes(x=x, y=y, fill=factor(v))) +
+                scale_fill_manual(values=c("white", "black"), name="Not measured\n1=No, 0=Yes") +
+                theme_light() + ylab("") + xlab("Rows of data set") + ggtitle("")
+        
 }
 
 not_rec_list <- c("not known/not recorded",
@@ -87,12 +87,12 @@ df_srft[] <- lapply(df_srft, function(x) ifelse(x %in% na_list, NA, x))
 
 # Remove rows with empty values in all columns
 rem_row <- function(x) {
-  x[rowSums(is.na(x)) != ncol(x), ]
+        x[rowSums(is.na(x)) != ncol(x), ]
 }
 
 # Remove columns with empty values in all rows
 rem_col <- function(x) {
-  x[, colSums(is.na(x)) != nrow(x)]
+        x[, colSums(is.na(x)) != nrow(x)]
 }
 
 df_srft <- rem_row(df_srft)
@@ -136,12 +136,12 @@ df_srft$hospital_stay <- ifelse(df_srft$hospital_stay < 0, NA, df_srft$hospital_
 # true and false args must be same type, that's why as.Date(NA)
 
 df_srft[] <- lapply(df_srft, function(x) {
-  if (class(x) == "Date") {
-    dplyr::if_else(lubridate::year(x) < 2018, as.Date(NA), x)
-  }
-  else {
-    (x)
-  }
+        if (class(x) == "Date") {
+                dplyr::if_else(lubridate::year(x) < 2018, as.Date(NA), x)
+        }
+        else {
+                (x)
+        }
 })
 
 # biomarkers
@@ -232,40 +232,40 @@ table_weeks <- transform(table(df_srft$week_start))
 table_weeks$Var1 <- as.Date(table_weeks$Var1, format = "%Y-%m-%d")
 
 ggplot(data = table_weeks, aes(x = Var1, y = Freq)) + 
-  geom_point(size = 0.5) +
-  geom_line(aes(group = 1)) +
-  scale_y_continuous(limits = c(0, 20)) +
-  scale_x_date(date_breaks = "1 week", date_labels = "%d-%b") +
-  labs(title = "Aggregated number of surgeries per week", 
-       caption = "Starting on monday") +
-  ylab("Count") + xlab("Week") +
-  theme_fivethirtyeight()
+        geom_point(size = 0.5) +
+        geom_line(aes(group = 1)) +
+        scale_y_continuous(limits = c(0, 20)) +
+        scale_x_date(date_breaks = "1 week", date_labels = "%d-%b") +
+        labs(title = "Aggregated number of surgeries per week", 
+             caption = "Starting on monday") +
+        ylab("Count") + xlab("Week") +
+        theme_fivethirtyeight()
 
 ggsave(filename = "surgey_week.png", path = "./plots", device = "png", units = "cm", height = 15, width = 30)
 
 # aggregated number of surgeries per day of the week
 df_srft %>% 
-  mutate(day_week = lubridate::wday(df_srft$surgery_date, label = TRUE)) %>% 
-  ggplot(data = ., aes(x = day_week)) +
-  geom_bar() +
-  scale_y_continuous(limits = c(0, 50)) +
-  labs(title = "Aggregated surgeries per\nday of the week",
-       caption = paste("From", min(df_srft$surgery_date, na.rm = TRUE), "to", max(df_srft$surgery_date, na.rm = TRUE))) +
-  ylab("Count") + xlab("Day of week") +
-  theme_fivethirtyeight()
+        mutate(day_week = lubridate::wday(df_srft$surgery_date, label = TRUE)) %>% 
+        ggplot(data = ., aes(x = day_week)) +
+        geom_bar() +
+        scale_y_continuous(limits = c(0, 50)) +
+        labs(title = "Aggregated surgeries per\nday of the week",
+             caption = paste("From", min(df_srft$surgery_date, na.rm = TRUE), "to", max(df_srft$surgery_date, na.rm = TRUE))) +
+        ylab("Count") + xlab("Day of week") +
+        theme_fivethirtyeight()
 
 ggsave(filename = "surgery_day.png", path = "./plots", device = "png", units = "cm", height = 9, width = 15)
 
 
 # aggregated number of discharges per day of the week
 df_srft %>%
-  mutate(dis_day = lubridate::wday(df_srft$discharge_date, week_start = 1, label = TRUE)) %>%
-  ggplot(data = ., aes(x = dis_day)) +
-  geom_bar() +
-  scale_y_continuous(limits = c(0, 30)) +
-  labs(title = "Aggregated number of D/C per day of week",
-       caption = paste("From", min(df_srft$discharge_date, na.rm = TRUE), "to", max(df_srft$discharge_date, na.rm = TRUE))) +
-  theme_fivethirtyeight()
+        mutate(dis_day = lubridate::wday(df_srft$discharge_date, week_start = 1, label = TRUE)) %>%
+        ggplot(data = ., aes(x = dis_day)) +
+        geom_bar() +
+        scale_y_continuous(limits = c(0, 30)) +
+        labs(title = "Aggregated number of D/C per day of week",
+             caption = paste("From", min(df_srft$discharge_date, na.rm = TRUE), "to", max(df_srft$discharge_date, na.rm = TRUE))) +
+        theme_fivethirtyeight()
 
 ggsave(filename = "discharge_day.png", path = "./plots", device = "png", units = "cm", height = 10, width = 20)
 
@@ -273,15 +273,28 @@ ggsave(filename = "discharge_day.png", path = "./plots", device = "png", units =
 # table(lubridate::month(df_srft[df_srft$readmit_30 == "yes", "discharge_date"], label = TRUE), useNA = "ifany")
 
 df_srft %>% 
-  filter(readmit_30 == "yes") %>% 
-  select(discharge_date) %>% 
-  mutate(month_dc = lubridate::month(discharge_date, label = TRUE)) %>% 
-    ggplot(data = ., aes(x = month_dc)) +
-    geom_bar() +
-    labs(title = "Aggregated R/A grouped by month of D/C") +
-    theme_fivethirtyeight()
+        filter(readmit_30 == "yes") %>% 
+        select(discharge_date) %>% 
+        mutate(month_dc = lubridate::month(discharge_date, label = TRUE)) %>% 
+        ggplot(data = ., aes(x = month_dc)) +
+        geom_bar() +
+        labs(title = "Aggregated R/A grouped by month of D/C") +
+        theme_fivethirtyeight()
 
 ggsave(filename = "readmit_month.png", path = "./plots", device = "png", units = "cm", height = 10, width = 20)
+
+# what proportion of patients were readmitted grouped by month of discharge?
+df_srft %>% select(discharge_date, readmit_30) %>% 
+        mutate(dc_month = lubridate::month(discharge_date, label = TRUE)) %>% na.omit() %>% 
+        group_by(dc_month, readmit_30) %>% summarise(n = n()) %>% 
+        mutate(rel_freq = round(n/sum(n), 2)) %>%
+        ggplot(data = ., aes(x = dc_month, y = rel_freq, fill = readmit_30)) +
+        geom_col() +
+        geom_text(aes(label = n)) +
+        theme_fivethirtyeight()
+
+
+# what patients were complient with at least 4 (out of 5) items of icough bundle?
 
 
 # https://stackoverflow.com/questions/32398427/r-split-a-character-string-on-the-second-underscore
