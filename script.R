@@ -4,7 +4,7 @@ library(lubridate)
 library(readxl)
 library(ggthemes)
 
-# Sys.setlocale("LC_ALL", "uk")
+Sys.setlocale("LC_ALL", "uk")
 # Create destination folders
 if (!dir.exists("./data")) dir.create("./data")
 if (!dir.exists("./plots")) dir.create("./plots")
@@ -241,7 +241,7 @@ ggplot(data = table_weeks, aes(x = Var1, y = Freq)) +
         ylab("Count") + xlab("Week") +
         theme_fivethirtyeight()
 
-ggsave(filename = "surgey_week.png", path = "./plots", device = "png", units = "cm", height = 15, width = 30)
+ggsave(filename = "surgey_week.png", path = "./plots", device = "png", units = "cm", height = 15, width = 30, dpi = 700)
 
 # aggregated number of surgeries per day of the week
 df_srft %>% 
@@ -254,7 +254,24 @@ df_srft %>%
         ylab("Count") + xlab("Day of week") +
         theme_fivethirtyeight()
 
-ggsave(filename = "surgery_day.png", path = "./plots", device = "png", units = "cm", height = 9, width = 15)
+ggsave(filename = "surgery_day.png", path = "./plots", device = "png", units = "cm", height = 9, width = 15, dpi = 700)
+
+# same as above but proportions
+df_srft %>%
+  mutate(day_week = lubridate::wday(df_srft$surgery_date, label = TRUE)) %>%
+  group_by(day_week) %>%
+  summarise(n = n()) %>%
+  mutate(rel_freq = n / sum(n)) %>%
+  ggplot(data = ., aes(x = day_week, y = rel_freq)) +
+  geom_col() +
+  scale_y_continuous(limits = c(0, 0.35)) +
+  labs(
+    title = "Rel. freq. surgeries per\nday of the week",
+    caption = paste("From", min(df_srft$surgery_date, na.rm = TRUE), "to", max(df_srft$surgery_date, na.rm = TRUE))
+  ) +
+  theme_fivethirtyeight()
+
+ggsave(filename = "surgery_day_freq.png", path = "./plots", device = "png", units = "cm", height = 9, width = 15, dpi = 700)
 
 
 # aggregated number of discharges per day of the week
@@ -267,7 +284,7 @@ df_srft %>%
              caption = paste("From", min(df_srft$discharge_date, na.rm = TRUE), "to", max(df_srft$discharge_date, na.rm = TRUE))) +
         theme_fivethirtyeight()
 
-ggsave(filename = "discharge_day.png", path = "./plots", device = "png", units = "cm", height = 10, width = 20)
+ggsave(filename = "discharge_day.png", path = "./plots", device = "png", units = "cm", height = 10, width = 20, dpi = 700)
 
 # aggregated readmissions grouped by month of discharge
 # table(lubridate::month(df_srft[df_srft$readmit_30 == "yes", "discharge_date"], label = TRUE), useNA = "ifany")
@@ -281,20 +298,46 @@ df_srft %>%
         labs(title = "Aggregated R/A grouped by month of D/C") +
         theme_fivethirtyeight()
 
-ggsave(filename = "readmit_month.png", path = "./plots", device = "png", units = "cm", height = 10, width = 20)
+ggsave(filename = "readmit_month.png", path = "./plots", device = "png", units = "cm", height = 10, width = 20, dpi = 700)
 
 # what proportion of patients were readmitted grouped by month of discharge?
-df_srft %>% select(discharge_date, readmit_30) %>% 
-        mutate(dc_month = lubridate::month(discharge_date, label = TRUE)) %>% na.omit() %>% 
-        group_by(dc_month, readmit_30) %>% summarise(n = n()) %>% 
-        mutate(rel_freq = round(n/sum(n), 2)) %>%
-        ggplot(data = ., aes(x = dc_month, y = rel_freq, fill = readmit_30)) +
-        geom_col() +
-        geom_text(aes(label = n)) +
-        theme_fivethirtyeight()
+
+df_srft %>%
+  select(discharge_date, readmit_30) %>%
+  mutate(dc_month = lubridate::month(discharge_date, label = TRUE)) %>%
+  na.omit() %>%
+  group_by(dc_month, readmit_30) %>%
+  summarise(n = n()) %>%
+  mutate(rel_freq = n / sum(n)) %>%
+  ggplot(data = ., aes(x = dc_month, y = rel_freq, fill = readmit_30)) +
+  geom_col() +
+  labs(title = "Rel. freq. R/A grouped by month of D/C",
+       fill = "Readmitted?") +
+  theme_fivethirtyeight()
+
+ggsave(filename = "readmit_month_freq.png", path = "./plots", device = "png", units = "cm", height = 10, width = 20, dpi = 700)
 
 
-# what patients were complient with at least 4 (out of 5) items of icough bundle?
+# How many patients are complient with at least 4 (out of 5) items of icough bundle?
+bundle_yes <- c(">two", "once", "twice", "yes")
+
+df_srft %>%
+  select(inc_spiro, t_brushes, m_washes, oral_diet, mobilised) %>%
+  sapply(., function(x) {
+    if_else(x %in% bundle_yes, 1, 0)
+  }) %>%
+  as.data.frame(.) %>%
+  mutate(compliant = rowSums(.)) %>%
+  mutate(
+    compliant = if_else(compliant >= 4, "yes", "no"),
+    area_surgery = df_srft$area_surgery
+  ) %>%
+  ggplot(data = ., aes(x = compliant)) +
+  stat_count() +
+  labs(title = "Patients compliant with iCough bundle by area") +
+  theme_fivethirtyeight() +
+        facet_wrap(vars(area_surgery), ncol = 2)
+
 
 
 # https://stackoverflow.com/questions/32398427/r-split-a-character-string-on-the-second-underscore
