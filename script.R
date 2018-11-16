@@ -22,7 +22,7 @@ na_list <- c(
 )
 # .csv encoding is WINDOWS-1252. Change to UTF-8
 data_path <- list.files("./data", pattern = "\\.csv", full.names = TRUE, ignore.case = TRUE)[[1]]
-df_srft <- read.csv(data_path, strip.white = TRUE, stringsAsFactors = FALSE, nrows = 188)
+df_srft <- read.csv(data_path, strip.white = TRUE, stringsAsFactors = FALSE, nrows = 200)
 df_srft[, sapply(df_srft, is.character)] <- sapply(df_srft[, sapply(df_srft, is.character)], 
                                                    iconv, from = "WINDOWS-1252", to = "UTF-8")
 # lower caps and trim ws
