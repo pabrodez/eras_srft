@@ -1,3 +1,5 @@
+# use median absolute deviation for LoS
+
 # Libraries and import---------------------------------------------------------------
 
 library(readr)
