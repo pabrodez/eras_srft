@@ -1,4 +1,4 @@
-# use median absolute deviation for LoS
+# use median absolute deviation and median deviation range for LoS
 
 # Libraries and import---------------------------------------------------------------
 
