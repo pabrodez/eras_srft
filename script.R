@@ -31,10 +31,11 @@ na_list <- c(
 )
 # .csv encoding is WINDOWS-1252. Change to UTF-8
 data_path <- list.files("./data", pattern = "\\.csv", full.names = TRUE, ignore.case = TRUE)[[1]]
-df_srft <- read.csv(data_path, strip.white = TRUE, stringsAsFactors = FALSE, nrows = 280)
-df_srft[, sapply(df_srft, is.character)] <- sapply(df_srft[, sapply(df_srft, is.character)], 
-                                                   iconv, from = "WINDOWS-1252", to = "UTF-8")
-
+df_srft <- read.csv(data_path, strip.white = TRUE, stringsAsFactors = FALSE, nrows = 300)
+df_srft[, sapply(df_srft, is.character)] <- sapply(df_srft[, sapply(df_srft, is.character)],
+  iconv,
+  from = "WINDOWS-1252", to = "UTF-8"
+)
 # Data prep ---------------------------------------------------------------
 
 # lower caps and trim ws
@@ -70,31 +71,31 @@ not_rec_list <- c("not known/not recorded", "n/r",
                   "not measured", "Not Measured", "none measured", "None Measured", "not done", "Not Done",
                   "n/d", "Not Recorded", "not recorded", "u/k", "unknown")
 
-plotmiss(df_srft[, vars_pre], na_values = not_rec_list)
-# ggsave(filename = "nr_pre.png", path = "./plots", device = "png", units = "cm", height = 25, width = 20, dpi = 700)
-
-plotmiss(df_srft[, vars_2], na_values = not_rec_list)
-# ggsave(filename = "nr_2.png", path = "./plots", device = "png", units = "cm", height = 25, width = 20, dpi = 700)
-
-plotmiss(df_srft[, vars_7], na_values = not_rec_list)
-# ggsave(filename = "nr_7.png", path = "./plots", device = "png", units = "cm", height = 25, width = 20, dpi = 700)
-
-plotmiss(df_srft[, vars_adm], na_values = not_rec_list)
-# ggsave(filename = "nr_adm.png", path = "./plots", device = "png", units = "cm", height = 25, width = 20, dpi = 700)
+# plotmiss(df_srft[, vars_pre], na_values = not_rec_list)
+# ggsave(filename = "nr_pre.tiff", path = "./plots", device = "tiff", units = "cm", height = 20, width = 15, dpi = 700)
+# 
+# plotmiss(df_srft[, vars_2], na_values = not_rec_list)
+# ggsave(filename = "nr_2.png", path = "./plots", device = "png", units = "cm", height = 20, width = 15, dpi = 700)
+# 
+# plotmiss(df_srft[, vars_7], na_values = not_rec_list)
+# ggsave(filename = "nr_7.png", path = "./plots", device = "png", units = "cm", height = 20, width = 15, dpi = 700)
+# 
+# plotmiss(df_srft[, vars_adm], na_values = not_rec_list)
+# ggsave(filename = "nr_adm.png", path = "./plots", device = "png", units = "cm", height = 20, width = 15, dpi = 700)
 
 # Pure NA values
 na_pure <- c(NA, 0, "0", "", "NA", "na", "n/a", "<NA>")
-plotmiss(df_srft[, vars_pre], na_values = na_pure)
-# ggsave(filename = "na_pre.png", path = "./plots", device = "png", units = "cm", height = 25, width = 20, dpi = 700)
-
-plotmiss(df_srft[, vars_2], na_values = na_pure)
-# ggsave(filename = "na_2.png", path = "./plots", device = "png", units = "cm", height = 25, width = 20, dpi = 700)
-
-plotmiss(df_srft[, vars_7], na_values = na_pure)
-# ggsave(filename = "na_7.png", path = "./plots", device = "png", units = "cm", height = 25, width = 20, dpi = 700)
-
-plotmiss(df_srft[, vars_adm], na_values = na_pure)
-# ggsave(filename = "na_adm.png", path = "./plots", device = "png", units = "cm", height = 25, width = 20, dpi = 700)
+# plotmiss(df_srft[, vars_pre], na_values = na_pure)
+# ggsave(filename = "na_pre.png", path = "./plots", device = "png", units = "cm", height = 20, width = 15, dpi = 700)
+# 
+# plotmiss(df_srft[, vars_2], na_values = na_pure)
+# ggsave(filename = "na_2.png", path = "./plots", device = "png", units = "cm", height = 20, width = 15, dpi = 700)
+# 
+# plotmiss(df_srft[, vars_7], na_values = na_pure)
+# ggsave(filename = "na_7.png", path = "./plots", device = "png", units = "cm", height = 20, width = 15, dpi = 700)
+# 
+# plotmiss(df_srft[, vars_adm], na_values = na_pure)
+# ggsave(filename = "na_adm.png", path = "./plots", device = "png", units = "cm", height = 20, width = 15, dpi = 700)
 
 # replace not recorded and missing values with NA
 df_srft[] <- lapply(df_srft, function(x) ifelse(x %in% na_list, NA, x))
@@ -259,19 +260,22 @@ ggplot(data = table_weeks, aes(x = Var1, y = Freq)) +
   scale_x_date(date_breaks = "1 week", date_labels = "%d-%b") +
   labs(title = "Aggregated number of surgeries per week", 
        caption = "Starting on monday") +
-  ylab("Count") + xlab("Week") +
-  theme_fivethirtyeight()
+  theme_fivethirtyeight() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 0.4, vjust = 0)) 
+
+# ggsave(filename = "surgeries_per_week.png", path = "./plots", device = "png", units = "cm", height = 15, width = 25, dpi = 700)
 
 # aggregated number of surgeries per day of the week
 df_srft %>% 
   mutate(day_week = lubridate::wday(df_srft$surgery_date, label = TRUE, week_start = 1)) %>% 
   ggplot(data = ., aes(x = day_week)) +
   geom_bar() +
-  scale_y_continuous(limits = c(0, 50)) +
+  scale_y_continuous(limits = c(0, 75)) +
   labs(title = "Aggregated surgeries per\nday of the week",
        caption = paste("From", min(df_srft$surgery_date, na.rm = TRUE), "to", max(df_srft$surgery_date, na.rm = TRUE))) +
-  ylab("Count") + xlab("Day of week") +
   theme_fivethirtyeight()
+
+# ggsave(filename = "surgeries_per_wday.png", path = "./plots", device = "png", units = "cm", height = 15, width = 20, dpi = 700)
 
 # same as above but proportions
 df_srft %>%
@@ -281,12 +285,14 @@ df_srft %>%
   mutate(rel_freq = n / sum(n)) %>%
   ggplot(data = ., aes(x = day_week, y = rel_freq)) +
   geom_col() +
-  scale_y_continuous(limits = c(0, 0.35)) +
+  scale_y_continuous(limits = c(0, 0.28)) +
   labs(
     title = "Rel. freq. surgeries per\nday of the week",
     caption = paste("From", min(df_srft$surgery_date, na.rm = TRUE), "to", max(df_srft$surgery_date, na.rm = TRUE))
   ) +
   theme_fivethirtyeight()
+
+# ggsave(filename = "surgeries_per_wday_prop.png", path = "./plots", device = "png", units = "cm", height = 15, width = 20, dpi = 700)
 
 # aggregated number of discharges per day of the week
 df_srft %>%
@@ -294,9 +300,11 @@ df_srft %>%
   ggplot(data = ., aes(x = dis_day)) +
   geom_bar() +
   # scale_y_continuous(limits = c(0, 30)) +
-  labs(title = "Aggregated number of D/C per day of week",
+  labs(title = "Aggregated number of d/c \nper day of week",
        caption = paste("From", min(df_srft$discharge_date, na.rm = TRUE), "to", max(df_srft$discharge_date, na.rm = TRUE))) +
   theme_fivethirtyeight()
+
+# ggsave(filename = "discharges_per_wday.png", path = "./plots", device = "png", units = "cm", height = 15, width = 15, dpi = 700)
 
 # aggregated readmissions grouped by month of discharge
 # table(lubridate::month(df_srft[df_srft$readmit_30 == "yes", "discharge_date"], label = TRUE), useNA = "ifany")
@@ -307,7 +315,10 @@ df_srft %>%
   dplyr::select(discharge_date, area_surgery, monthyr_disc) %>%
   ggplot(data = ., aes(x = monthyr_disc)) +
   geom_bar() +
-  theme_bw()
+  labs(title = "Aggregated readmissions grouped \nby month of discharge") +
+  theme_fivethirtyeight()
+
+# ggsave(filename = "readm_month_discharge.png", path = "./plots", device = "png", units = "cm", height = 15, width = 20, dpi = 300)
 
 # what proportion of patients were readmitted grouped by month of discharge?
 df_srft %>%
@@ -319,10 +330,12 @@ df_srft %>%
   mutate(rel_freq = n / sum(n)) %>%
   ggplot(data = ., aes(x = monthyr_disc, y = rel_freq, fill = readmit_30)) +
   geom_col() +
-  labs(
+  labs(title = "Proportion of patients readmitted \ngrouped by month of discharge",
        fill = "Readmitted?",
        x = "", y= "") +
-  theme_bw()
+  theme_fivethirtyeight()
+
+# ggsave(filename = "readm_month_discharge_prop.png", path = "./plots", device = "png", units = "cm", height = 15, width = 20, dpi = 300)
 
 # How many patients are compliant with at least 4 (out of 5) items of icough bundle?
 bundle_yes <- c(">two", "once", "twice", "yes")
@@ -345,6 +358,8 @@ df_srft %>%
   theme_fivethirtyeight() +
   facet_wrap(vars(area_surgery), ncol = 2)
 
+ggsave(filename = "icough_compl_area.png", path = "./plots", device = "png", units = "cm", height = 20, width = 20, dpi = 300)
+
 # what icough item patients are less compliant with by area
 df_srft %>%
   dplyr::select(inc_spiro, t_brushes, m_washes, oral_diet, mobilised) %>%
@@ -365,8 +380,11 @@ df_srft %>%
   ggplot(data = .) + 
   geom_col(aes(x = key, y = value)) +
   facet_wrap(vars(area_surgery, compliant), scales = "free_x", ncol = 2) +
-  labs(title = "icough items compliance by area") +
+  labs(title = "icough items compliance by area",
+       subtitle = "grouped by yes/no overall compliance") +
   theme_fivethirtyeight()
+
+# ggsave(filename = "icough_items_compl_area.png", path = "./plots", device = "png", units = "cm", height = 30, width = 20, dpi = 300)
 
 # What proportion of patients who were still in hospital on day 7 had any infectious complication by week?
 compl_yes <- c("abdominal leak", "chest", "surgical site infection", "empirical", "urine")
@@ -381,10 +399,12 @@ df_srft %>%
   geom_line(aes(group = 1), colour = "#FF2700") +
   scale_x_date(date_breaks = "1 week", date_labels = "%d-%b") +
   geom_point(size = 0.8) +
-  labs(title = "[0, 1] prop. of pts. who were in hosp. at day 7 and\nhad any type of complication") +
+  labs(title = "[0, 1] prop. of pts. who were in hosp. at day 7 and\nhad any infectious complication") +
   geom_text(aes(label = n_pts), size = 3, vjust = 0, nudge_y = 0.05) +
   theme_fivethirtyeight() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.1))
+  theme(axis.text.x = element_text(angle = 60, vjust = 0.1))
+
+# ggsave(filename = "infection_day7.png", path = "./plots", device = "png", units = "cm", height = 15, width = 20, dpi = 300)
 
 # Top 5 surgeons by number of surgeries
 surgeons_df <- transform(table(unlist(strsplit(df_srft$surgeon, ",\\s"))))
@@ -437,22 +457,26 @@ plotCat <- function(datain, ii) {
 df_srft$monthyr_surg <- format(as.Date(df_srft$surgery_date), "%Y-%m")
 df_srft %>%
   dplyr::select(monthyr_surg, hospital_stay, area_surgery) %>%
-  filter(area_surgery == "urology and endocrinology") %>% 
   mutate(stay = hospital_stay) %>%
   na.omit() %>%
   group_by(monthyr_surg) %>%
   summarise(avg_los = mean(stay, na.rm = TRUE),
-            n = n()) %>%
+            n = n(),
+            sdev = sd(hospital_stay, na.rm = TRUE)) %>%
   ggplot(data = ., aes(x = monthyr_surg, y = avg_los)) +
   geom_line(aes(group = 1), colour = "#FF2700") +
   geom_point(size = 0.2) +
+  # geom_errorbar(aes(x = monthyr_surg, ymin = avg_los - sdev, ymax = avg_los + sdev), 
+  #               na.rm = TRUE,
+  #               width = .08) +
   scale_y_continuous(limits = c(0, 20)) +
   geom_text(aes(label = n), size = 3, vjust = -0.5, nudge_y = 0.1) +
-  ylab("Average") +
-  xlab("Month of surgery") +
-  # labs(
-  #      caption = paste("Last D/C:", max(df_srft$discharge_date, na.rm = TRUE))) +
-  theme_bw()
+  labs(title = "Average LoS per month of surgery") +
+  labs(
+       caption = paste("Last D/C:", max(df_srft$discharge_date, na.rm = TRUE))) +
+  theme_fivethirtyeight()
+
+# ggsave(filename = "avg_los_month_sd.png", path = "./plots", device = "png", units = "cm", height = 15, width = 20, dpi = 300)
 
 # Avg LOS per area (aggregate(x = df_srft$hospital_stay, by = list(df_srft$area_surgery), FUN = mean, na.rm = TRUE))
 df_srft %>% 
@@ -465,10 +489,12 @@ df_srft %>%
   geom_errorbar(aes(x = area_surgery, ymin = avg_los - sdev, ymax = avg_los + sdev), 
                 na.rm = TRUE,
                 width = .08) +
-  scale_y_continuous(limits = c(0, 20), breaks = seq(0, 20, 5)) +
+  # scale_y_continuous(limits = c(0, 20), breaks = seq(0, 20, 5)) +
   labs(title = "Mean LoS and SD per area", 
        caption = paste("Last D/C:", max(df_srft$discharge_date, na.rm = TRUE))) +
   theme_fivethirtyeight()
+
+# ggsave(filename = "avg_los_area.png", path = "./plots", device = "png", units = "cm", height = 15, width = 20, dpi = 300)
 
 # Same as above but median absolute deviation
 df_srft %>% 
@@ -482,38 +508,45 @@ df_srft %>%
                 na.rm = TRUE,
                 width = .08) +
   scale_y_continuous(limits = c(0, 20), breaks = seq(0, 20, 5)) +
-  labs(title = "Median LoS and median absolute deviation per area", 
-       caption = paste("Last D/C:", max(df_srft$discharge_date, na.rm = TRUE))) +
+  labs(title = "Median LoS and \nmedian absolute deviation per area", 
+       caption = paste("Last d/c:", max(df_srft$discharge_date, na.rm = TRUE))) +
   theme_fivethirtyeight()
+
+# ggsave(filename = "median_los_area.png", path = "./plots", device = "png", units = "cm", height = 15, width = 20, dpi = 300)
 
 # LoS distribution
 df_srft %>%
-  dplyr::select(area_surgery, hospital_stay) %>%
+  dplyr::select(area_surgery, hospital_stay) %>% 
+  na.omit() %>% 
   ggplot(data = .) +
-  stat_bin(aes(x = hospital_stay), binwidth = 1) +
+  stat_bin(aes(x = hospital_stay), binwidth = 1, colour = "Dark Gray") +
   scale_x_continuous(breaks = seq(min(df_srft$hospital_stay, na.rm = TRUE), max(df_srft$hospital_stay, na.rm = TRUE), 3)) +
-  scale_y_continuous(limits = c(0, 25), breaks = seq(0, 25, 5)) +
+  scale_y_continuous(limits = c(0, 28), breaks = seq(0, 30, 5)) +
   labs(
     title = "LoS distribution",
     caption = paste("Last D/C:", max(df_srft$discharge_date, na.rm = TRUE))
   ) +
   theme_fivethirtyeight()
 
+# ggsave(filename = "los_distribution.png", path = "./plots", device = "png", units = "cm", height = 15, width = 20, dpi = 300)
+
 # LOS distribution per area
 los_back <- subset(df_srft, select = -area_surgery)
 
 ggplot(data = df_srft, aes(x = hospital_stay, fill = area_surgery)) +
-  geom_histogram(colour = "black", binwidth = 1) +
+  geom_histogram(colour = "grey", binwidth = 1) +
   geom_histogram(data = los_back, fill = "grey", alpha = .5, binwidth = 1) +
-  scale_x_continuous(breaks = seq(min(df_srft$hospital_stay, na.rm = TRUE), max(df_srft$hospital_stay, na.rm = TRUE), 2)) +
+  scale_x_continuous(breaks = seq(min(df_srft$hospital_stay, na.rm = TRUE), max(df_srft$hospital_stay, na.rm = TRUE), 6)) +
   labs(
-    title = "LOS per area",
+    title = "LoS per area",
     caption = paste("Last D/C:", max(df_srft$discharge_date, na.rm = TRUE))
   ) +
   facet_wrap(vars(area_surgery), ncol = 2, scales = "free_y") +
   theme_fivethirtyeight() +
   guides(fill = FALSE)
 # geom_text(stat = "count", aes(label = ..count.., y = ..count..), vjust = -.5)
+
+# ggsave(filename = "los_distribution_area.png", path = "./plots", device = "png", units = "cm", height = 25, width = 20, dpi = 300)
 
 # LOS grouped by icough items complied with
 df_srft %>% dplyr::select(inc_spiro, m_washes, t_brushes, oral_diet, mobilised, hospital_stay) %>% 
@@ -532,9 +565,11 @@ df_srft %>% dplyr::select(inc_spiro, m_washes, t_brushes, oral_diet, mobilised, 
                  max(df_srft$hospital_stay, na.rm = TRUE), 3)) +
   geom_jitter(width = 0.25) +
   theme_fivethirtyeight() +
-  labs(title = "Number of iCough items complied with and hospital stay\nwithin 24h after surgery",
+  labs(title = "Number of iCough items complied with \nand hospital stay",
        caption = paste("From", min(df_srft$surgery_date, na.rm = TRUE), "to", max(df_srft$surgery_date, na.rm = TRUE))) +
   theme(legend.position = "none")
+
+# ggsave(filename = "los_icough_compliance.png", path = "./plots", device = "png", units = "cm", height = 25, width = 20, dpi = 300)
 
 # Same as above but area of surgery is given a colour
 df_srft %>% dplyr::select(inc_spiro, m_washes, t_brushes, oral_diet, mobilised, hospital_stay, area_surgery) %>% 
@@ -551,12 +586,15 @@ df_srft %>% dplyr::select(inc_spiro, m_washes, t_brushes, oral_diet, mobilised, 
   scale_y_continuous(
     breaks = seq(min(df_srft$hospital_stay, na.rm = TRUE),
                  max(df_srft$hospital_stay, na.rm = TRUE), 3)) +
+  scale_color_discrete(name = "Specialty") +
   geom_jitter(width = 0.25) +
   theme_fivethirtyeight() +
-  labs(title = "Number of iCough items complied with and hospital stay\nwithin 24h after surgery",
+  labs(title = "Number of iCough items complied with \nand hospital stay",
        caption = paste("From", min(df_srft$surgery_date, na.rm = TRUE), "to", max(df_srft$surgery_date, na.rm = TRUE))) +
   theme(legend.position = "right",
         legend.direction = "vertical")
+
+# ggsave(filename = "los_icough_compliance_area.png", path = "./plots", device = "png", units = "cm", height = 25, width = 20, dpi = 300)
 
 # Day of the week of surgery and LOS
 # makes sense that complex surgeries are not usually placed on fridays as there is less medical resources available
@@ -564,16 +602,23 @@ df_srft %>% dplyr::select(inc_spiro, m_washes, t_brushes, oral_diet, mobilised, 
 # complex surgeries are obviously placed on days of the week from where there's a long uninterrupted care with high resources available
 df_srft %>% 
   dplyr::select(surgery_date, 
-                hospital_stay) %>% 
+                hospital_stay,
+                area_surgery) %>% 
   mutate(day_week = lubridate::wday(surgery_date, label = TRUE, week_start = 1)) %>% 
   na.omit() %>% 
   ggplot(., aes(x = day_week, y = hospital_stay, colour = day_week)) +
+  
   scale_y_continuous(
     breaks = seq(min(df_srft$hospital_stay, na.rm = TRUE),
                  max(df_srft$hospital_stay, na.rm = TRUE), 3)) +
   geom_jitter(width = 0.25) +
+  labs(title = "Day of the week of surgery and LoS") +
   theme_fivethirtyeight() +
-  theme(legend.position = "none")
+  theme(legend.position = "right",
+        legend.direction = "vertical") +
+  coord_flip()
+
+ggsave(filename = "wday_surgery_los.png", path = "./plots", device = "png", units = "cm", height = 20, width = 25, dpi = 300)
 
 # Infectious complication within 7 days and LOS
 compl_yes <- c("abdominal leak", "chest", "surgical site infection", "empirical", "urine")
@@ -585,10 +630,12 @@ df_srft %>%
   scale_y_continuous(
     breaks = seq(min(df_srft$hospital_stay, na.rm = TRUE),
                  max(df_srft$hospital_stay, na.rm = TRUE), 3)) +
-  geom_jitter(width = 0.25) +
+  geom_jitter(width = 0.25)+
+  labs(title = "Any infectious complication and LoS") +
   theme_fivethirtyeight() +
-  theme(text = element_text(size = 25)) +
   coord_flip()
+
+# ggsave(filename = "infection_any_los.png", path = "./plots", device = "png", units = "cm", height = 20, width = 25, dpi = 300)
 
 # POMS and LOS
 df_srft %>%
@@ -609,7 +656,12 @@ df_srft %>%
   scale_y_continuous(breaks = seq(min(df_srft$hospital_stay, na.rm = TRUE),
                                   max(df_srft$hospital_stay, na.rm = TRUE), 3)) +
   theme_fivethirtyeight() +
-  theme(legend.position = "none")
+  labs(title = "POMS and LoS",
+       caption = "Pts d/c before day 7 and POMS administered but not d/c are ignored") +
+  theme(legend.position = "none") +
+  coord_flip()
+
+# ggsave(filename = "poms_los.png", path = "./plots", device = "png", units = "cm", height = 20, width = 25, dpi = 300)
 
 # ERAS+ Dashboard measures for Haelo --------------------------------------
 measures_plots <- list()
@@ -881,26 +933,31 @@ los_km <- survfit(Surv(time = time_event, event = discharge) ~ 1, data = df_suv,
 
 ggsurvplot(los_km,
            conf.int = TRUE,
-           risk.table = "nrisk_cumevents",
            legend = "none",
            surv.median.line = "hv",
            linetype = 1,
            palette = "lancet",
            break.x.by = 3,
-           ggtheme = theme_fivethirtyeight()
+           ggtheme = theme_fivethirtyeight(),
+           subtitle = "Estimation probability of still being in hospital after T,\ngiven stay up to T"
 )
+
+# ggsave(filename = "surv_all.png", path = "./plots", device = "png", units = "cm", height = 15, width = 20, dpi = 300)
 
 # add poms yes no groups considering pts d/c before day 7  as not showing any morbidity
 los_km_poms <- survfit(Surv(time = time_event, event = discharge) ~ poms, data = df_suv)
-suvplot_poms_all <- ggsurvplot(los_km_poms,
-                               conf.int = TRUE,
-                               risk.table = FALSE,
-                               surv.median.line = "hv",
-                               linetype = 1,
-                               palette = "lancet",
-                               break.x.by = 3,
-                               ggtheme = theme_fivethirtyeight()
-)
+ggsurvplot(los_km_poms,
+  conf.int = TRUE,
+  risk.table = FALSE,
+  surv.median.line = "hv",
+  linetype = 1,
+  palette = "lancet",
+  break.x.by = 3,
+  ggtheme = theme_fivethirtyeight(),
+  subtitle = "POMS yes/no"
+  )
+
+# ggsave(filename = "surv_poms_all.png", path = "./plots", device = "png", units = "cm", height = 15, width = 20, dpi = 300)
 
 # combined poms yes/no and general curves
 ggsurvplot_combine(list(poms = los_km_poms, general = los_km),
@@ -912,6 +969,9 @@ ggsurvplot_combine(list(poms = los_km_poms, general = los_km),
                    break.x.by = 3,
                    ggtheme = theme_fivethirtyeight()
 )
+
+# ggsave(filename = "surv_poms_with_overall.png", path = "./plots", device = "png", units = "cm", height = 15, width = 25, dpi = 300)
+
 # Compare 2 curves for POMS: (i) consider all patients and those d/c before 7 days are considered not to have morb
 # (ii) consider only pts where POMS was administered, this is, pts not d/c before day 7
 # (i)
@@ -938,15 +998,18 @@ df_suv_7 <- df_srft %>%
 
 los_km_poms_7 <- survfit(Surv(time = time_event, event = discharge) ~ poms, data = df_suv_7)
 
-suvplot_poms_7 <- ggsurvplot(los_km_poms_7,
-                             conf.int = TRUE,
-                             risk.table = FALSE,
-                             surv.median.line = "hv",
-                             linetype = 1,
-                             palette = "lancet",
-                             break.x.by = 3,
-                             ggtheme = theme_fivethirtyeight()
+ggsurvplot(los_km_poms_7,
+  conf.int = TRUE,
+  risk.table = FALSE,
+  surv.median.line = "hv",
+  linetype = 1,
+  palette = "lancet",
+  break.x.by = 7,
+  ggtheme = theme_fivethirtyeight(),
+  subtitle = "Patients who were discharged before day 7 are not considered"
 )
+
+# ggsave(filename = "surv_poms_only7.png", path = "./plots", device = "png", units = "cm", height = 15, width = 25, dpi = 300)
 
 # In this Kaplan-Meier curve, comparing strata of patients who had a morbidity and who did not, patients who were discharged before day 7 are not considered to not have any morbidity according to POMS (whereas the previous curve did include patients discharged before day 7 by giving a zero score in POMS). This is: this curve only shows patients who were administered the POMS (see next plot). The POMS, in the data collection process, is only administered on day 7, and the time reference is the previous 24 hours. For example, \marginpar{Kaplan-Meier estimate: $$\hat{S}_i =\left( \frac{n_i-d_i}{n_i} \right) \hat{S}_{i-1}.$$}it might be the case that the patient could qualify as showing a morbidity according to POMS on day 3 or 5, and this is not recorded if the patients is discharged before the follow-up on day 7. In other words, we do not know if the patient had or not a morbidity if it is not recorded. It would be reasonable to assume that if that was the case, the patient would stay for 7 or more days as they would need extra treatment. However, [administering POMS on the very first days after surgery might confuse  prophylactic interventions with actual treatment for a morbidity](https://pqip.org.uk/FilesUploaded/Library/Postoperative/7.3%20complications%203%20Grocott%20-%20Postoperative%20morbidity%20survey%20validation.pdf). 
 
@@ -976,20 +1039,26 @@ ggsurvplot(los_km_cough,
            linetype = 1,
            palette = "lancet",
            break.x.by = 3,
-           ggtheme = theme_fivethirtyeight()
+           ggtheme = theme_fivethirtyeight(),
+           subtitle = "grouped by compliance with iCough"
 )
 
+# ggsave(filename = "surv_compliance.png", path = "./plots", device = "png", units = "cm", height = 15, width = 25, dpi = 300)
+
 # KM grouped by compliant and poms (pts d/c before 7 days are considered as no morb)
-survfit(Surv(time = time_event, event = discharge) ~ compliant + strata(poms), data = df_suv, type = "kaplan-meier") %>% 
+survfit(Surv(time = time_event, event = discharge) ~ compliant + strata(poms), data = df_suv, type = "kaplan-meier") %>%
   ggsurvplot(.,
-             conf.int = TRUE,
-             risk.table = FALSE,
-             surv.median.line = "hv",
-             linetype = 1,
-             palette = "lancet",
-             break.x.by = 3,
-             ggtheme = theme_fivethirtyeight()
+    conf.int = TRUE,
+    risk.table = FALSE,
+    surv.median.line = "hv",
+    linetype = 1,
+    palette = "lancet",
+    break.x.by = 3,
+    ggtheme = theme_fivethirtyeight()
   )
+
+# ggsave(filename = "surv_compliance_poms_all.png", path = "./plots", device = "png", units = "cm", height = 15, width = 25, dpi = 300)
+
 # Same as above but considering only patients who were administered POMS
 compl_poms_7 <- df_srft %>%
   dplyr::select(
@@ -1031,12 +1100,11 @@ ggsurvplot(compl_poms_7_km,
            linetype = 1,
            palette = "lancet",
            break.x.by = 3,
-           ggtheme = theme_fivethirtyeight()
+           ggtheme = theme_fivethirtyeight(),
+           subtitle = "Only patients administered with POMS"
 )
 
-
-
-
+ggsave(filename = "surv_compliance_poms_only7.png", path = "./plots", device = "png", units = "cm", height = 15, width = 25, dpi = 300)
 
 # weibull model
 los_wb <- survreg(Surv(time = time_event, event = discharge) ~ 1, data = df_suv)
@@ -1203,3 +1271,173 @@ df_srft %>%
 df_srft %>% dplyr::select(area_surgery, complication, discharge_date) %>% 
   filter(area_surgery == "colorectal" & !is.na(discharge_date)) %>% 
   group_by(lubridate::month(discharge_date, label = TRUE))
+
+# Oesophagectomies --------------------------------------------------------
+# count PPC per week
+# By week with median
+df_srft[grepl("oeso", df_srft$surgery), ] %>% 
+  dplyr::select(infec_7, pulm_supp_7, week_start) %>% 
+  filter(!is.na(infec_7)) %>% 
+  mutate(infec_7 = if_else(infec_7 == "chest", 1, 0),
+         pulm_supp_7 = if_else(pulm_supp_7 %in% c("mild", "moderate", "severe"), 1, 0)) %>% 
+  mutate(ppc = if_else(infec_7 == 1 | pulm_supp_7 == 1, 1, 0)) %>%
+  group_by(week_start) %>%
+  summarise(count = sum(ppc),
+            n=n()
+            ) %>%
+  ggplot(data = ., aes(x = as.Date(week_start, format = "%Y-%m-%d"), y = count)) +
+  geom_line(colour = "#FF2700") +
+  geom_point(size = 1) +
+  geom_text(aes(label = n), size = 3,nudge_x = 0, nudge_y = 0.08) +
+  geom_hline(aes(yintercept = median(count)), linetype = 2) +
+  scale_x_date(date_breaks = "1 week", date_labels = "%b-%d") +
+  theme_fivethirtyeight() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+# By week with mean
+df_srft[grepl("oeso", df_srft$surgery), ] %>% 
+  dplyr::select(infec_7, pulm_supp_7, week_start) %>% 
+  filter(!is.na(infec_7)) %>% 
+  mutate(infec_7 = if_else(infec_7 == "chest", 1, 0),
+         pulm_supp_7 = if_else(pulm_supp_7 %in% c("mild", "moderate", "severe"), 1, 0)) %>% 
+  mutate(ppc = if_else(infec_7 == 1 | pulm_supp_7 == 1, 1, 0)) %>%
+  group_by(week_start) %>%
+  summarise(count = sum(ppc),
+            n=n()
+  ) %>%
+  ggplot(data = ., aes(x = as.Date(week_start, format = "%Y-%m-%d"), y = count)) +
+  geom_line(colour = "#FF2700") +
+  geom_point(size = 1) +
+  geom_text(aes(label = n), size = 3,nudge_x = 0, nudge_y = 0.08) +
+  geom_hline(aes(yintercept = mean(count)), linetype = 2) +
+  scale_x_date(date_breaks = "1 week", date_labels = "%b-%d") +
+  theme_fivethirtyeight() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# By month with median
+df_srft[grepl("oeso", df_srft$surgery), ] %>% 
+  dplyr::select(surgery_date, infec_7, pulm_supp_7) %>% 
+  mutate(month = format.Date(surgery_date, format = "%Y-%m")) %>% 
+  filter(!is.na(infec_7)) %>% 
+  mutate(infec_7 = if_else(infec_7 == "chest", 1, 0),
+         pulm_supp_7 = if_else(pulm_supp_7 %in% c("mild", "moderate", "severe"), 1, 0)) %>% 
+  mutate(ppc = if_else(infec_7 == 1 | pulm_supp_7 == 1, 1, 0)) %>%
+  group_by(month) %>%
+  summarise(count = sum(ppc),
+            n=n()
+  ) %>%
+  ggplot(data = ., aes(x = month, y = count, group = 1)) +
+  geom_line(colour = "#FF2700") +
+  geom_point(size = 1) +
+  geom_text(aes(label = n), size = 3,nudge_x = 0, nudge_y = 0.08) +
+  geom_hline(aes(yintercept = median(count)), linetype = 2) +
+  theme_fivethirtyeight() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# By month with mean
+df_srft[grepl("oeso", df_srft$surgery), ] %>% 
+  dplyr::select(surgery_date, infec_7, pulm_supp_7) %>% 
+  mutate(month = format.Date(surgery_date, format = "%Y-%m")) %>% 
+  filter(!is.na(infec_7)) %>% 
+  mutate(infec_7 = if_else(infec_7 == "chest", 1, 0),
+         pulm_supp_7 = if_else(pulm_supp_7 %in% c("mild", "moderate", "severe"), 1, 0)) %>% 
+  mutate(ppc = if_else(infec_7 == 1 | pulm_supp_7 == 1, 1, 0)) %>%
+  group_by(month) %>%
+  summarise(count = sum(ppc),
+            n=n()
+  ) %>%
+  ggplot(data = ., aes(x = month, y = count, group = 1)) +
+  geom_line(colour = "#FF2700") +
+  geom_point(size = 1) +
+  geom_text(aes(label = n), size = 3,nudge_x = 0, nudge_y = 0.08) +
+  geom_hline(aes(yintercept = mean(count)), linetype = 2) +
+  theme_fivethirtyeight() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Prop by week with median
+df_srft[grepl("oeso", df_srft$surgery), ] %>% 
+  dplyr::select(surgery_date, infec_7, pulm_supp_7, week_start) %>% 
+  filter(!is.na(infec_7)) %>% 
+  mutate(infec_7 = if_else(infec_7 == "chest", 1, 0),
+         pulm_supp_7 = if_else(pulm_supp_7 %in% c("mild", "moderate", "severe"), 1, 0)) %>% 
+  mutate(ppc = if_else(infec_7 == 1 | pulm_supp_7 == 1, 1, 0)) %>% 
+  group_by(week_start) %>%
+  summarise(denominator = n(), 
+            numerator = sum(ppc),
+            prop = sum(ppc) / n(),
+            n=n()) %>% 
+  ggplot(data = ., aes(x = as.Date(week_start, format = "%Y-%m-%d"), y = prop)) +
+  geom_line(colour = "#FF2700") +
+  geom_point(size = 1) +
+  # geom_hline(aes(yintercept = median(prop)), linetype = 2) +
+  geom_text(aes(label = n), size = 3,nudge_x = 0, nudge_y = 0.08) +
+  geom_hline(aes(yintercept = median(prop)), linetype = 2) +
+  scale_x_date(date_breaks = "1 week", date_labels = "%b-%d") +
+  scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.25)) +
+  theme_fivethirtyeight() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Prop by week with mean
+df_srft[grepl("oeso", df_srft$surgery), ] %>% 
+  dplyr::select(surgery_date, infec_7, pulm_supp_7, week_start) %>% 
+  filter(!is.na(infec_7)) %>% 
+  mutate(infec_7 = if_else(infec_7 == "chest", 1, 0),
+         pulm_supp_7 = if_else(pulm_supp_7 %in% c("mild", "moderate", "severe"), 1, 0)) %>% 
+  mutate(ppc = if_else(infec_7 == 1 | pulm_supp_7 == 1, 1, 0)) %>% 
+  group_by(week_start) %>%
+  summarise(denominator = n(), 
+            numerator = sum(ppc),
+            prop = sum(ppc) / n(),
+            n=n()) %>% 
+  ggplot(data = ., aes(x = as.Date(week_start, format = "%Y-%m-%d"), y = prop)) +
+  geom_line(colour = "#FF2700") +
+  geom_point(size = 1) +
+  # geom_hline(aes(yintercept = median(prop)), linetype = 2) +
+  geom_text(aes(label = n), size = 3,nudge_x = 0, nudge_y = 0.08) +
+  geom_hline(aes(yintercept = mean(prop)), linetype = 2) +
+  scale_x_date(date_breaks = "1 week", date_labels = "%b-%d") +
+  scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.25)) +
+  theme_fivethirtyeight() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Prop by month with median
+df_srft[grepl("oeso", df_srft$surgery), ] %>% 
+  dplyr::select(surgery_date, infec_7, pulm_supp_7) %>% 
+  mutate(month = format.Date(surgery_date, format = "%Y-%m")) %>% 
+  filter(!is.na(infec_7)) %>% 
+  mutate(infec_7 = if_else(infec_7 == "chest", 1, 0),
+         pulm_supp_7 = if_else(pulm_supp_7 %in% c("mild", "moderate", "severe"), 1, 0)) %>% 
+  mutate(ppc = if_else(infec_7 == 1 | pulm_supp_7 == 1, 1, 0)) %>%
+  group_by(month) %>%
+  summarise(count = sum(ppc),
+            n=n(),
+            prop = sum(ppc) / n()
+  ) %>%
+  ggplot(data = ., aes(x = month, y = prop, group = 1)) +
+  geom_line(colour = "#FF2700") +
+  geom_point(size = 1) +
+  geom_text(aes(label = n), size = 3,nudge_x = 0, nudge_y = 0.08) +
+  geom_hline(aes(yintercept = median(prop)), linetype = 2) +
+  scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.25)) +
+  theme_fivethirtyeight() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+# Prop by month with mean
+df_srft[grepl("oeso", df_srft$surgery), ] %>% 
+  dplyr::select(surgery_date, infec_7, pulm_supp_7) %>% 
+  mutate(month = format.Date(surgery_date, format = "%Y-%m")) %>% 
+  filter(!is.na(infec_7)) %>% 
+  mutate(infec_7 = if_else(infec_7 == "chest", 1, 0),
+         pulm_supp_7 = if_else(pulm_supp_7 %in% c("mild", "moderate", "severe"), 1, 0)) %>% 
+  mutate(ppc = if_else(infec_7 == 1 | pulm_supp_7 == 1, 1, 0)) %>%
+  group_by(month) %>%
+  summarise(count = sum(ppc),
+            n=n(),
+            prop = sum(ppc) / n()
+  ) %>%
+  ggplot(data = ., aes(x = month, y = prop, group = 1)) +
+  geom_line(colour = "#FF2700") +
+  geom_point(size = 1) +
+  geom_text(aes(label = n), size = 3,nudge_x = 0, nudge_y = 0.08) +
+  geom_hline(aes(yintercept = mean(prop)), linetype = 2) +
+  scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.25)) +
+  theme_fivethirtyeight() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
