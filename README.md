@@ -1,2 +1,2 @@
-## R script for data wrangling of ERAS+ dataset at SRFT
+## R scripts for data wrangling of ERAS+ dataset at SRFT
 
