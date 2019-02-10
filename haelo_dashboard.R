@@ -308,13 +308,6 @@ print_measure <- function(data, measure_fun, area = "all") {
   }
 }
 
-
-
-
-
-
-
-
 # 2 Read data -------------------------------------------------------------
 df_colorectal <- read_xlsx("./data/colorectal_5_years.xlsx", sheet = 2,
                            col_types = c("skip", "skip", "skip", "date", "date", "text", "text", "skip", 
@@ -373,5 +366,3 @@ ggplot(discharge_df) +
   theme_fivethirtyeight() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
   
-
-
