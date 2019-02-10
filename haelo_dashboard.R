@@ -10,6 +10,9 @@ library(readxl)
 library(survival)
 library(survminer)
 library(survMisc)
+library(stringr)
+library(ggthemes)
+library(reshape2)
 # 1.1 Read data ---------------------------------------------------------------
 data_path <- list.files("./data", pattern = "\\.csv", full.names = TRUE, ignore.case = TRUE)[[1]]  ## save "collated" sheet as a single .csv file and move manually to folder "data"
 df_srft <- read.csv(data_path, strip.white = TRUE, stringsAsFactors = FALSE, nrow = 305)           ## specify number of rows to read as excel tends to generate blank rows, slowing this step      
@@ -313,5 +316,47 @@ print_measure <- function(data, measure_fun, area = "all") {
 
 
 # 2 Read data -------------------------------------------------------------
-df_colorectal <- read_xlsx("./data/colorectal_5_years.xlsx", sheet = 2)
-df_colorectal$PatientNumber[duplicated(df_colorectal$PatientNumber)]
+df_colorectal <- read_xlsx("./data/colorectal_5_years.xlsx", sheet = 2,
+                           col_types = c("skip", "skip", "skip", "date", "date", "text", "text", "skip", 
+                                         "numeric", "numeric", "numeric", "numeric", "text"),
+                           trim_ws = TRUE)
+
+# 2.2 Transform --------------------------------------------------------------------
+colnames(df_colorectal) <- c("admission_date", "discharge_date", "surgery_code", "surgery_name", "los",
+  "readm_30", "mort_30", "mort_90", "cc_stay")
+
+df_colorectal[] <- lapply(df_colorectal, function(x)
+  if (is.character(x)) {
+    tolower(x)
+  } else {
+    x
+  })
+
+df_colorectal$admission_date <- as.Date(df_colorectal$admission_date, format = "%Y-%m-%d")
+df_colorectal$discharge_date <- as.Date(df_colorectal$discharge_date, format = "%Y-%m-%d")
+df_colorectal$month_adm <- as.Date(cut.Date(df_colorectal$admission_date, breaks = "months"))
+df_colorectal$week_adm <- as.Date(cut.Date(df_colorectal$admission_date, breaks = "weeks"))
+df_colorectal$week_dis <- as.Date(cut.Date(df_colorectal$discharge_date, breaks = "weeks"))
+
+# Number of patients by week
+df_colorectal %>% group_by(week_adm) %>% summarise(n = n()) %>% 
+{
+  ggplot(., aes(x = .$week_adm, y = .$n)) +
+    geom_line() +
+    scale_x_date(date_breaks = "3 month") +
+    scale_y_continuous(breaks = seq(min(.$n), max(.$n), 1)) +
+    theme_fivethirtyeight() +
+    theme(axis.text.x = element_text(angle = 45))
+}
+
+# Mean and median of length of stay grouped by month of discharge
+discharge_df <- df_colorectal %>%
+  select(discharge_date, los) %>%
+  mutate(month = format(discharge_date, "%Y-%m")) %>%
+  group_by(month) %>%
+  summarise(
+    median = median(los),
+    mad    = mad(los),
+    mean   = mean(los),
+    sd     = sd(los),
+    count  = n())
