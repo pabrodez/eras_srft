@@ -164,7 +164,7 @@ df_haelo <-
 
 # 1.4 Measures ----------------------------------------------------------------
 # 1.4.1 Patients that attended Surgery School
-count_surgery <- function(data, time) {
+count_surgery <- function(data, time_group) {
   dplyr::select(data, area_surgery, surgery_school, chest_physio, week_start, month_surgery) %>%
     group_by(time) %>%
     summarise(
@@ -177,9 +177,9 @@ count_surgery <- function(data, time) {
 }
 
 # 1.4.2 Number of readmissions within 30 days by month of discharge
-count_readm <- function(data, time) {
-  dplyr::select(data, discharge_my, area_surgery, readmit_30, week_start) %>%
-    group_by(time) %>%
+count_readm <- function(data, time_group) {
+  select(data,"discharge_my", "area_surgery", "readmit_30", "week_start") %>% 
+    group_by(!! time_group) %>% 
     summarise(
       n_patients = n(), ## number of pts discharged that month
       readmit_na = sum(is.na(readmit_30)), ## number of patients for whom 30 days after discharge haven't passed
@@ -188,18 +188,18 @@ count_readm <- function(data, time) {
 }
 
 # 1.4.3 Number of patients with Postoperative Pulmonary Complication by week of surgery
-count_ppc <- function(data, time) {
+count_ppc <- function(data, time_group) {
   dplyr::select(data, week_start, infec_7, pulm_supp_7, area_surgery, month_surgery) %>%
     group_by(time) %>%
     summarise(
       n_patients = n(),
       patients_ppc = sum(infec_7 == "chest" |
-        pulm_supp_7 %in% c("moderate", "mild", "severe"), na.rm = TRUE)
+                           pulm_supp_7 %in% c("moderate", "mild", "severe"), na.rm = TRUE)
     )
 }
 
 # 1.4.4 Average Length of Stay grouped by month of discharge
-get_los_mean <- function(data, time) {
+get_los_mean <- function(data, time_group) {
   dplyr::select(discharge_my, hospital_stay, area_surgery) %>%
     group_by(time) %>%
     summarise(
@@ -207,7 +207,7 @@ get_los_mean <- function(data, time) {
       n_patients = n()
     )
 }
-  
+
 # 1.4.5 Satisfaction score
 foo_satis <- data.frame(
   score = sample(1:5, 200, replace = TRUE),
@@ -220,7 +220,7 @@ foo_satis %>%
   print.data.frame()
 
 # 1.4.6 Number of patients compliant with iCough bundle
-count_icough <- function(data, time) {
+count_icough <- function(data, time_group) {
   dplyr::select(data, area_surgery, week_start, nas_columns, compliant) %>%
     filter(nas_columns != 5) %>% ## Remove pts without all 5 items recorded
     group_by(time) %>%
@@ -230,7 +230,7 @@ count_icough <- function(data, time) {
     )
 }
 # 1.4.7 Number of patients that had their teeth brushed twice
-count_tbrush <- function(data, time) {
+count_tbrush <- function(data, time_group) {
   dplyr::select(data, area_surgery, week_start, t_brushes, nas_columns) %>%
     filter(nas_columns != 5) %>%
     group_by(time) %>%
@@ -240,9 +240,9 @@ count_tbrush <- function(data, time) {
       n_nas = sum(is.na(t_brushes))
     )
 }
-  
+
 # 1.4.8 Number of patients mobilised
-count_mob <- function(data, time) {
+count_mob <- function(data, time_group) {
   dplyr::select(data, area_surgery, week_start, mobilised, nas_columns) %>%
     filter(nas_columns != 5) %>%
     group_by(time) %>%
@@ -254,7 +254,7 @@ count_mob <- function(data, time) {
 }
 
 # 1.4.9 Number of patients that used incentive spirometer
-count_spiro <- function(data) {
+count_spiro <- function(data, time_group) {
   dplyr::select(data, area_surgery, week_start, inc_spiro, nas_columns) %>%
     filter(nas_columns != 5) %>%
     group_by(week_start) %>%
@@ -266,7 +266,7 @@ count_spiro <- function(data) {
 }
 
 # 1.4.10 Number of patients that used mouth wash twice
-count_mwash <- function(data) {
+count_mwash <- function(data, time_group) {
   dplyr::select(data, area_surgery, week_start, m_washes, nas_columns) %>%
     filter(nas_columns != 5) %>%
     group_by(week_start) %>%
@@ -278,7 +278,7 @@ count_mwash <- function(data) {
 }
 
 # 1.4.11 Number of patients who re-started oral diet
-count_diet <- function(data) {
+count_diet <- function(data, time_group) {
   dplyr::select(data, area_surgery, week_start, oral_diet, nas_columns) %>%
     filter(nas_columns != 5) %>%
     group_by(week_start) %>%
@@ -302,15 +302,6 @@ print_measure <- function(data, measure_fun, area = "all", time = month_surgery)
 
 print_measure(df_haelo, measure_fun = count_readm, time=week_start)
 
-count_readm <- function(data, time) {
-  select(data,"discharge_my", "area_surgery", "readmit_30", "week_start") %>% 
-    group_by(!! time) %>% 
-    summarise(
-      n_patients = n(), ## number of pts discharged that month
-      readmit_na = sum(is.na(readmit_30)), ## number of patients for whom 30 days after discharge haven't passed
-      number_readmit = sum(readmit_30 == "yes", na.rm = TRUE)
-    )
-}
 
 # 2 Read data -------------------------------------------------------------
 df_colorectal <- read_xlsx("./data/colorectal_5_years.xlsx", sheet = 2,
@@ -369,3 +360,5 @@ ggplot(discharge_df) +
   # ) +
   theme_fivethirtyeight() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# 2.3  Merge df_srft and df_colorectal --------------------------------------------------------------------
