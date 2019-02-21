@@ -1,3 +1,21 @@
 ## R scripts for data wrangling of ERAS+ dataset at SRFT
-- haelo_dashboard.R: clean and format data for use in the dashboard provided by Haelo
-- script.R: interactive and general purpose
+
+Some files omitted for data governance reasons
+
+|- README.md                        # top-level description of content
+|
+|- data-raw/                        # raw data, not changed once created
+|  +- colorectal_5_years.xlsx       # baseline colorectal data 
+|  +- eras_srft.csv	                # spreadsheet eras project
+|  +- ppt_oesophagectomies.xlsx     # baseline oesophagectomies data
+|
+|- scripts/                         # scripts to read and clean
+|  +- 01_import_clean_colorectal.R     
+|  +- 02_import_clean_eras.R   
+|  +- 03_import_clean_oeso.R 
+|  +- 04_haelo                       
+|
+|- reports/ 			                  # Automated reports 
+|  +- colorectal.Rmd                # Rmd for colorectal dataset
+|  +- eras_srft.Rmd                 # Rmd for eras dataset
+|  +- oesophagectomies.Rmd          # Rmd for oesophagectomies dataset
