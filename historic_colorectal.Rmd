@@ -376,7 +376,7 @@ select(df_colorectal, readm_30, mort_90, mort_30, discharge_date) %>%
 
 
 ## Kaplan-Meier estimations of probability of being in hospital over time since adm
-```{r surv curves}
+```{r surv_all}
 df_surv <- select(colorectal_merged, admission_date, discharge_date, los, baseline) %>%
   mutate(
     discharge = if_else(!is.na(discharge_date), 1, 0),
@@ -401,12 +401,12 @@ ggsurvplot(los_km_year,
 
 ```
 
-```{r surv facet}
-los_km <- survfit(Surv(time = time_event, event = discharge) ~ 1, data = df_surv, type = "kaplan-meier")
+```{r surv_facet}
+los_km <- survfit(Surv(time = time_event, event = discharge) ~ baseline, data = df_surv, type = "kaplan-meier")
 
-ggsurvplot_group_by(los_km,
+ggsurvplot(los_km,
   data = df_surv,
-  group.by = "year_adm",
+  facet.by = "year_adm",
   surv.median.line = "hv",
   linetype = 1,
   palette = "lancet",
