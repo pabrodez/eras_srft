@@ -13,7 +13,7 @@ project
 |  +- haelo_dashboard.R
 |
 |- reports/ 			                  # Automated reports 
-|  +- colorectal.Rmd                # Rmd for colorectal dataset
+|  +- historic_colorectal.Rmd                # Rmd for colorectal dataset
 |  +- eras_srft.Rmd                 # Rmd for eras dataset
 |  +- oesophagectomies.Rmd          # Rmd for oesophagectomies dataset
 |  +- haelo.Rmd			                # Rmd for Haelo measures
