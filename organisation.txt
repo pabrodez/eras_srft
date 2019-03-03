@@ -7,7 +7,7 @@ project
 |  +- ppt_oesophagectomies.xlsx     # baseline oesophagectomies data
 |
 |- scripts/                         # scripts to read and clean
-|  +- colorectal.R     
+|  +- colorectal_baseline.R     
 |  +- eras.R   
 |  +- oeso.R  
 |  +- haelo_dashboard.R
