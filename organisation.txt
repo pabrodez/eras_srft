@@ -8,8 +8,8 @@ project
 |
 |- scripts/                         # scripts to read and clean
 |  +- colorectal_baseline.R     
-|  +- eras.R   
-|  +- oeso.R  
+|  +- eras_local.R   
+|  +- oeso_baseline.R  
 |  +- haelo_dashboard.R
 |
 |- reports/ 			                  # Automated reports 
