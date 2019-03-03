@@ -7,10 +7,10 @@ project
 |  +- ppt_oesophagectomies.xlsx     # baseline oesophagectomies data
 |
 |- scripts/                         # scripts to read and clean
-|  +- 01_import_clean_colorectal.R     
-|  +- 02_import_clean_eras.R   
-|  +- 03_import_clean_oeso.R  
-|  +- 04_haelo.R
+|  +- colorectal.R     
+|  +- eras.R   
+|  +- oeso.R  
+|  +- haelo.R
 |
 |- reports/ 			                  # Automated reports 
 |  +- colorectal.Rmd                # Rmd for colorectal dataset
