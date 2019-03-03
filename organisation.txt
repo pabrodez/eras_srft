@@ -10,7 +10,7 @@ project
 |  +- colorectal.R     
 |  +- eras.R   
 |  +- oeso.R  
-|  +- haelo.R
+|  +- haelo_dashboard.R
 |
 |- reports/ 			                  # Automated reports 
 |  +- colorectal.Rmd                # Rmd for colorectal dataset
