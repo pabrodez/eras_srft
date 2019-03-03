@@ -3,7 +3,7 @@ project
 |
 |- data-raw/                        # raw data, not changed once created
 |  +- colorectal_5_years.xlsx       # baseline colorectal data 
-|  +- eras_srft.csv	            # spreadsheet eras project
+|  +- eras_srft.csv	                # spreadsheet eras project
 |  +- ppt_oesophagectomies.xlsx     # baseline oesophagectomies data
 |
 |- scripts/                         # scripts to read and clean
@@ -12,8 +12,9 @@ project
 |  +- 03_import_clean_oeso.R  
 |  +- 04_haelo.R
 |
-|- reports/ 			    # Automated reports 
+|- reports/ 			                  # Automated reports 
 |  +- colorectal.Rmd                # Rmd for colorectal dataset
 |  +- eras_srft.Rmd                 # Rmd for eras dataset
 |  +- oesophagectomies.Rmd          # Rmd for oesophagectomies dataset
-|  +- haelo.Rmd			    # Rmd for Haelo measures
+|  +- haelo.Rmd			                # Rmd for Haelo measures
+|  +- flex_haelo.Rmd                # Flexdashboard for Haelo measures by specialty 
