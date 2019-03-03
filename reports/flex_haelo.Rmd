@@ -1,0 +1,426 @@
+---
+title: "ERAS+ measures by specialty"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    source_code: embed
+    vertical_layout: scroll
+---
+
+```{r setup, include=FALSE}
+# Reference: https://rmarkdown.rstudio.com/flexdashboard/index.html
+
+library(flexdashboard)
+library(plotly)
+
+source("./scripts/haelo_dashboard.R", echo = FALSE)
+# script for data import, cleaning and formatting of ERAS dataset
+# also defines several functions that format the data for specific measures
+# print_measure() takes data, a function that formats it, a time to group by (months, weeks) and area of surgery
+# plot_session() can take data input from print_measure() output and returns a plot
+
+print_measure(df_haelo, measure_fun = count_readm, time=discharge_my)  ## time = week_start or discharge_my
+
+plot_session <- function(data, x = week_start, y = y, measure_fun) {
+  x_aes <- enquo(x)
+  y_aes <- enquo(y)
+  {ggplot(data = data, aes(x = !! x_aes, y = !! y_aes, text = sprintf("Patients: %s", n_patients))) +
+    geom_line(aes(group = 1), colour = "#4192f4") +
+    geom_point(size = 1) +
+    scale_x_discrete(drop = FALSE) +
+    theme_minimal() + 
+      theme(axis.title = element_blank(),
+            axis.text.x = element_text(angle = 45, hjust = 1)
+            )
+    } %>% 
+  ggplotly(toooltip = c("text"))
+}
+
+```
+
+
+All
+===================================== 
+Row
+-------------------------------------
+### Surgery School attendance
+
+```{r}
+print_measure(df_haelo, measure_fun=count_surgery, time=week_start) %>% 
+  plot_session(data = ., x = week_start, y = y)
+
+```
+
+### Number of readmissions within 30 days by month of discharge
+
+```{r}
+print_measure(df_haelo, measure_fun=count_readm, time=discharge_my) %>% 
+  plot_session(data = ., x = discharge_my, y = y)
+```
+
+Row
+-------------------------------------
+### PPCs by week of surgery
+```{r}
+print_measure(df_haelo, measure_fun = count_ppc, time=week_start) %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+### Average LoS grouped by month of discharge
+```{r}
+print_measure(df_haelo, measure_fun = avg_los, time=discharge_my) %>% 
+  plot_session(data = ., x = discharge_my, y = y)
+```
+
+Row
+-------------------------------------
+### Patients compliant with iCough bundle
+```{r}
+print_measure(df_haelo, measure_fun = count_icough, time=week_start) %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+### Patients that had their teeth brushed twice
+```{r}
+print_measure(df_haelo, measure_fun = count_tbrush, time=week_start) %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+
+Row
+-------------------------------------
+### Number of patients mobilised
+```{r}
+print_measure(df_haelo, measure_fun = count_mob, time=week_start) %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+### Patients that used incentive spirometer
+```{r}
+print_measure(df_haelo, measure_fun = count_spiro, time=week_start) %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+
+Row
+-------------------------------------
+### Patients that used mouth wash twice
+```{r}
+print_measure(df_haelo, measure_fun = count_mwash, time=week_start) %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+### Patients who re-started oral diet
+```{r}
+print_measure(df_haelo, measure_fun = count_diet, time=week_start) %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+Colorectal
+===================================== 
+Row
+-------------------------------------
+### Surgery School attendance
+
+```{r}
+print_measure(df_haelo, measure_fun=count_surgery, time=week_start, area = "colorectal") %>% 
+  plot_session(data = ., x = week_start, y = y)
+
+```
+
+### Number of readmissions within 30 days by month of discharge
+
+```{r}
+print_measure(df_haelo, measure_fun=count_readm, time=discharge_my, area = "colorectal") %>% 
+  plot_session(data = ., x = discharge_my, y = y)
+```
+
+Row
+-------------------------------------
+### PPCs by week of surgery
+```{r}
+print_measure(df_haelo, measure_fun = count_ppc, time=week_start, area = "colorectal") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+### Average LoS grouped by month of discharge
+```{r}
+print_measure(df_haelo, measure_fun = avg_los, time=discharge_my, area = "colorectal") %>% 
+  plot_session(data = ., x = discharge_my, y = y)
+```
+
+Row
+-------------------------------------
+### Patients compliant with iCough bundle
+```{r}
+print_measure(df_haelo, measure_fun = count_icough, time=week_start, area = "colorectal") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+### Patients that had their teeth brushed twice
+```{r}
+print_measure(df_haelo, measure_fun = count_tbrush, time=week_start, area = "colorectal") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+
+Row
+-------------------------------------
+### Number of patients mobilised
+```{r}
+print_measure(df_haelo, measure_fun = count_mob, time=week_start, area = "colorectal") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+### Patients that used incentive spirometer
+```{r}
+print_measure(df_haelo, measure_fun = count_spiro, time=week_start, area = "colorectal") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+
+Row
+-------------------------------------
+### Patients that used mouth wash twice
+```{r}
+print_measure(df_haelo, measure_fun = count_mwash, time=week_start, area = "colorectal") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+### Patients who re-started oral diet
+```{r}
+print_measure(df_haelo, measure_fun = count_diet, time=week_start, area = "colorectal") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+Lower GI
+=====================================
+Row
+-------------------------------------
+### Surgery School attendance
+
+```{r}
+print_measure(df_haelo, measure_fun=count_surgery, time=week_start, area = "lower gi") %>% 
+  plot_session(data = ., x = week_start, y = y)
+
+```
+
+### Number of readmissions within 30 days by month of discharge
+
+```{r}
+print_measure(df_haelo, measure_fun=count_readm, time=discharge_my, area = "lower gi") %>% 
+  plot_session(data = ., x = discharge_my, y = y)
+```
+
+Row
+-------------------------------------
+### PPCs by week of surgery
+```{r}
+print_measure(df_haelo, measure_fun = count_ppc, time=week_start, area = "lower gi") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+### Average LoS grouped by month of discharge
+```{r}
+print_measure(df_haelo, measure_fun = avg_los, time=discharge_my, area = "lower gi") %>% 
+  plot_session(data = ., x = discharge_my, y = y)
+```
+
+Row
+-------------------------------------
+### Patients compliant with iCough bundle
+```{r}
+print_measure(df_haelo, measure_fun = count_icough, time=week_start, area = "lower gi") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+### Patients that had their teeth brushed twice
+```{r}
+print_measure(df_haelo, measure_fun = count_tbrush, time=week_start, area = "lower gi") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+
+Row
+-------------------------------------
+### Number of patients mobilised
+```{r}
+print_measure(df_haelo, measure_fun = count_mob, time=week_start, area = "lower gi") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+### Patients that used incentive spirometer
+```{r}
+print_measure(df_haelo, measure_fun = count_spiro, time=week_start, area = "lower gi") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+
+Row
+-------------------------------------
+### Patients that used mouth wash twice
+```{r}
+print_measure(df_haelo, measure_fun = count_mwash, time=week_start, area = "lower gi") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+### Patients who re-started oral diet
+```{r}
+print_measure(df_haelo, measure_fun = count_diet, time=week_start, area = "lower gi") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+
+Upper GI
+=====================================    
+Row
+-------------------------------------
+### Surgery School attendance
+
+```{r}
+print_measure(df_haelo, measure_fun=count_surgery, time=week_start, area = "upper gi") %>% 
+  plot_session(data = ., x = week_start, y = y)
+
+```
+
+### Number of readmissions within 30 days by month of discharge
+
+```{r}
+print_measure(df_haelo, measure_fun=count_readm, time=discharge_my, area = "upper gi") %>% 
+  plot_session(data = ., x = discharge_my, y = y)
+```
+
+Row
+-------------------------------------
+### PPCs by week of surgery
+```{r}
+print_measure(df_haelo, measure_fun = count_ppc, time=week_start, area = "upper gi") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+### Average LoS grouped by month of discharge
+```{r}
+print_measure(df_haelo, measure_fun = avg_los, time=discharge_my, area = "upper gi") %>% 
+  plot_session(data = ., x = discharge_my, y = y)
+```
+
+Row
+-------------------------------------
+### Patients compliant with iCough bundle
+```{r}
+print_measure(df_haelo, measure_fun = count_icough, time=week_start, area = "upper gi") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+### Patients that had their teeth brushed twice
+```{r}
+print_measure(df_haelo, measure_fun = count_tbrush, time=week_start, area = "upper gi") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+
+Row
+-------------------------------------
+### Number of patients mobilised
+```{r}
+print_measure(df_haelo, measure_fun = count_mob, time=week_start, area = "upper gi") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+### Patients that used incentive spirometer
+```{r}
+print_measure(df_haelo, measure_fun = count_spiro, time=week_start, area = "upper gi") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+
+Row
+-------------------------------------
+### Patients that used mouth wash twice
+```{r}
+print_measure(df_haelo, measure_fun = count_mwash, time=week_start, area = "upper gi") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+### Patients who re-started oral diet
+```{r}
+print_measure(df_haelo, measure_fun = count_diet, time=week_start, area = "upper gi") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+Urology
+=====================================  
+Row
+-------------------------------------
+### Surgery School attendance
+
+```{r}
+print_measure(df_haelo, measure_fun=count_surgery, time=week_start, area = "urology and endocrinology") %>% 
+  plot_session(data = ., x = week_start, y = y)
+
+```
+
+### Number of readmissions within 30 days by month of discharge
+
+```{r}
+print_measure(df_haelo, measure_fun=count_readm, time=discharge_my, area = "urology and endocrinology") %>% 
+  plot_session(data = ., x = discharge_my, y = y)
+```
+
+Row
+-------------------------------------
+### PPCs by week of surgery
+```{r}
+print_measure(df_haelo, measure_fun = count_ppc, time=week_start, area = "urology and endocrinology") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+### Average LoS grouped by month of discharge
+```{r}
+print_measure(df_haelo, measure_fun = avg_los, time=discharge_my, area = "urology and endocrinology") %>% 
+  plot_session(data = ., x = discharge_my, y = y)
+```
+
+Row
+-------------------------------------
+### Patients compliant with iCough bundle
+```{r}
+print_measure(df_haelo, measure_fun = count_icough, time=week_start, area = "urology and endocrinology") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+### Patients that had their teeth brushed twice
+```{r}
+print_measure(df_haelo, measure_fun = count_tbrush, time=week_start, area = "urology and endocrinology") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+
+Row
+-------------------------------------
+### Number of patients mobilised
+```{r}
+print_measure(df_haelo, measure_fun = count_mob, time=week_start, area = "urology and endocrinology") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+### Patients that used incentive spirometer
+```{r}
+print_measure(df_haelo, measure_fun = count_spiro, time=week_start, area = "urology and endocrinology") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+
+Row
+-------------------------------------
+### Patients that used mouth wash twice
+```{r}
+print_measure(df_haelo, measure_fun = count_mwash, time=week_start, area = "urology and endocrinology") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```
+
+### Patients who re-started oral diet
+```{r}
+print_measure(df_haelo, measure_fun = count_diet, time=week_start, area = "urology and endocrinology") %>% 
+  plot_session(data = ., x = week_start, y = y)
+```

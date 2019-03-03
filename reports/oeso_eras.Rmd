@@ -1,0 +1,676 @@
+---
+title: "Oesophagectomies baseline data at SRFT"
+author: "Pablo M. Rodriguez"
+date: "`r Sys.Date()`"
+output: 
+  tufte::tufte_html: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(tidy = FALSE, echo = TRUE, cache = FALSE, warning = FALSE, message = FALSE)
+options(htmltools.dir.version = FALSE)
+```
+```{r libraries, include=FALSE}
+library(tidyverse)
+library(lubridate)
+library(readxl)
+library(survival)
+library(survminer)
+library(survMisc)
+library(stringr)
+library(ggthemes)
+library(reshape2)
+library(knitr)
+library(kableExtra)
+library(gridExtra)
+library(survival)
+library(survminer)
+library(kableExtra)
+library(knitr)
+library(tint)
+library(tufte)
+library(scales)
+```
+```{r read and clean eras dataset, include=FALSE}
+# 1.1 Read ---------------------------------------------------------------
+# save "collated" sheet as a single .csv file and move manually to folder "data"
+df_srft <- read.csv("./data/eras_srft.csv", strip.white = TRUE, stringsAsFactors = FALSE, nrow = 325) ## specify number of rows to read as excel tends to generate blank rows, slowing this step
+df_srft[, sapply(df_srft, is.character)] <- sapply(df_srft[, sapply(df_srft, is.character)],
+  iconv,
+  from = "WINDOWS-1252", to = "UTF-8"
+)
+# 1.2 Clean -----------------------------------------------------------
+df_srft[] <- lapply(df_srft, function(x)
+  if (is.character(x) == TRUE) {
+    tolower(x)
+  } else {
+    x
+  })
+df_srft[] <- lapply(df_srft, function(x)
+  if (is.character(x) == TRUE) {
+    trimws(x)
+  } else {
+    x
+  })
+# Replace not recorded and missing values with NAs (to be discussed)
+na_list <- c(
+  0, "0", "", "NA", "na", "n/a", "<NA>", "not known/not recorded", "n/r",
+  "not measured", "Not Measured", "none measured", "None Measured", "not done", "Not Done",
+  "n/d", "Not Recorded", "not recorded", "u/k", "unknown", "#ref!"
+)
+df_srft[] <- lapply(df_srft, function(x) ifelse(x %in% na_list, NA, x))
+# Remove rows with empty values in all columns
+remove_blankr <- function(x) {
+  x[rowSums(is.na(x)) != ncol(x), ]
+}
+df_srft <- remove_blankr(df_srft)
+# Remove columns with empty values in all rows
+remove_blankc <- function(x) {
+  x[, colSums(is.na(x)) != nrow(x)]
+}
+df_srft <- remove_blankc(df_srft)
+# Set columns classes
+df_srft$admission_date <- as.Date(df_srft$admission_date, format = "%d/%m/%Y")
+df_srft$surgery_date <- as.Date(df_srft$surgery_date, format = "%d/%m/%Y")
+df_srft$discharge_date <- as.Date(df_srft$discharge_date, format = "%d/%m/%Y")
+df_srft$date_15 <- as.Date(df_srft$date_15, format = "%d/%m/%Y")
+df_srft$date_school <- as.Date(df_srft$date_school, origin = "1899-12-30")
+df_srft[] <- lapply(df_srft, function(x) {
+  if (class(x) == "Date") {
+    dplyr::if_else(lubridate::year(x) < 2018, as.Date(NA), x)
+  }
+  else {
+    (x)
+  }
+})
+df_srft$hospital_stay <- as.numeric(df_srft$hospital_stay)
+df_srft$hospital_stay <- ifelse(df_srft$hospital_stay < 0, NA, df_srft$hospital_stay)
+df_srft$hb <- as.numeric(df_srft$hb)
+df_srft$creatinine <- as.numeric(df_srft$creatinine)
+df_srft$albumin <- as.numeric(df_srft$albumin)
+df_srft$creatinine_base <- as.numeric(df_srft$creatinine_base)
+df_srft$creatinine_high <- as.numeric(df_srft$creatinine_high)
+df_srft$tidal_vol <- as.numeric(df_srft$tidal_vol)
+df_srft$discharge_loc <- sub("critical care (level 2)", "ccu (level 2)", df_srft$discharge_loc, fixed = TRUE)
+df_srft$discharge_loc <- sub("ccu (level 2 and 3)", "ccu (level 2/3)", df_srft$discharge_loc, fixed = TRUE)
+df_srft$discharge_loc <- str_replace(df_srft$discharge_loc, "^hdu$", "ccu")
+df_srft$anaesthesia <- sapply(strsplit(df_srft$anaesthesia, ",\\s"), `[`, 1)
+df_srft$surgeon <- gsub("/", ",", df_srft$surgeon, fixed = TRUE)
+df_srft[df_srft$surgeon == "bilal khaffaf", ]$surgeon <- "bilal alkhaffaf"
+df_srft[df_srft$area_surgery == "urology", ]$area_surgery <- "urology and endocrinology"
+df_srft[df_srft$area_surgery == "nephrology", ]$area_surgery <- "urology and endocrinology"
+df_srft[df_srft$area_surgery == "endocrinology", ]$area_surgery <- "urology and endocrinology"
+df_srft[df_srft$area_surgery == "head and neck", ]$area_surgery <- "other"
+df_srft[df_srft$surgery == "adrenalectomy (unilateral)", ]$surgery <- "adrenalectomy"
+df_srft[df_srft$surgery == "anterior resection of rectum", ]$surgery <- "anterior resection"
+df_srft[df_srft$surgery == "cystoscopy, stents laparotomy, adhesiolysis, small bowel resection, formation of ileostomy, abdominal wall reconstruction", ]$surgery <- "abdominal wall reconstruction"
+df_srft[df_srft$surgery == "gastrectomy (partial / total) with excision of surrounding tissue", ]$surgery <- "gastrectomy (total or partial) with excision of surrounding tissue"
+df_srft[df_srft$surgery == "ileo-caecal resection (with anastamosis or ileostomy formation)", ]$surgery <- "ileocaecal resection"
+df_srft[df_srft$surgery == "laparoscopic left hemicolectomy", ]$surgery <- "left hemicolectomy (with anastomosis /colostomy)"
+df_srft[df_srft$surgery == "laparoscopic left nephrectomy +/- open", ]$surgery <- "nephrectomy (non-transplant)"
+df_srft[df_srft$surgery == "left hemicolectomy (with colostomy)", ]$surgery <- "left hemicolectomy (with anastomosis /colostomy)"
+df_srft[df_srft$surgery == "left radical laparoscopic nephrectomy", ]$surgery <- "nephrectomy (non-transplant)"
+df_srft[df_srft$surgery == "nephrectomy and excision of perirenal tissue", ]$surgery <- "nephrectomy (non-transplant)"
+df_srft[df_srft$surgery == "oesophagectomy", ]$surgery <- "oesophagectomy (partial /total)/oesophagogastrectomy"
+df_srft[df_srft$surgery == "oesophagectomy (total)/oesophagogastrectomy", ]$surgery <- "oesophagectomy (partial /total)/oesophagogastrectomy"
+df_srft[df_srft$surgery == "open gastrectomy", ]$surgery <- "gastrectomy (partial / total) with excision of
+surrounding tissue"
+df_srft[df_srft$surgery == "laparoscopic right radical nephrectomy", ]$surgery <- "nephrectomy (non-transplant)"
+df_srft[df_srft$surgery == "open partial nephrectomy", ]$surgery <- "nephrectomy (non-transplant)"
+df_srft[df_srft$surgery == "open right adrenalectomy", ]$surgery <- "adrenalectomy"
+df_srft[df_srft$surgery == "open right radical nephrectomy with lymphadenectomy", ]$surgery <- "nephrectomy (non-transplant)"
+df_srft[df_srft$surgery == "partial gastrectomy (+/- excision of surrounding tissue)", ]$surgery <- "gastrectomy (partial / total) with excision of
+surrounding tissue"
+df_srft[df_srft$surgery == "right adrenalectomy", ]$surgery <- "adrenalectomy"
+df_srft[df_srft$surgery == "right hemicolectomy (with ileostomy)", ]$surgery <- "right hemicolectomy (with anastomosis /colostomy)"
+df_srft[df_srft$surgery == "subtotal gastrectomy", ]$surgery <- "gastrectomy (partial / total) with excision of
+surrounding tissue"
+df_srft[df_srft$surgery == "gastrectomy (total or partial) with excision of surrounding tissue", ]$surgery <- "gastrectomy (partial / total) with excision of
+surrounding tissue"
+df_srft$surgery <- sub("\\\n", " ", df_srft$surgery)
+df_srft[df_srft$surgery == "right hemicolectomy (with anastamosis)", ]$surgery <- "right hemicolectomy (with anastomosis /colostomy)"
+df_srft$tidal_vol <- as.numeric(df_srft$tidal_vol)
+df_srft$gastro <- ifelse(!is.na(df_srft$gastro) & df_srft$gastro == "experienced nausea, vomiting or distension, unable to tolerate enteral diet", "unable to tolerate enteral diet, experienced nausea, vomiting or distension", df_srft$gastro)
+# 1.3 Transform --------------------------------------------------------------
+df_srft <- rename(df_srft, comment_pre = comment) # Change col name and remove cancelled and non elegible patients
+df_srft <- df_srft[(!df_srft$comment_pre %in% c("cancelled", "down's syndrome") | is.na(df_srft$comment_pre)) &
+  (df_srft$gm_eras_ele != "no" | is.na(df_srft$gm_eras_ele)), ]
+df_srft$week_start <- cut.Date(df_srft$surgery_date, breaks = "week") ## week of surgery
+df_srft$month_surgery <- format(as.Date(df_srft$surgery_date), "%Y-%m") ## month of surgery
+df_srft$discharge_my <- format(as.Date(df_srft$discharge_date), "%Y-%m") ## month of discharge
+```
+
+# Data processing documentation
+The purpose of this document is to record the preparation of oesophagectomies baseline data.
+
+R software for data handling and formatting, and Rmarkdown for text composition were used.
+
+This document is structured step-wise: From data import to visualization, via data cleaning. Most steps are shown along the chunk of code from the whole script. When necessary code is omitted to avoid repetition.
+
+The data processing of the eras dataset is not documented here because of its length. The full script is [here](https://github.com/pabrodez/eras_srft/blob/master/oeso_eras.Rmd).
+
+The underlying aim is to enhance transparency, which subsequently eases detection of mistakes and improvement.
+
+## Data import
+Baseline data was provided in .ppt format. It was manually converted to .csv to ease import.
+`r tint::margin_note("Import, set column types and names")`
+```{r read}
+df_oeso <- read.csv("./data/ppt_oesophagectomies.csv",
+  colClasses = c("character", "character", "character", "character", "character", "character"),
+  na.strings = c("n/a", "NA"),
+  col.names = c("surgery_date", "pneumonia", "oxygen", "ventilated", "abx", "notes")
+)
+```
+
+`r tint::margin_note("Format date column and substitue values accordingly")`
+```{r date, echo=TRUE}
+df_oeso$surgery_date <- as.Date(df_oeso$surgery_date, "%d/%m/%Y")
+df_oeso <- df_oeso %>%
+  mutate_at(
+    vars(pneumonia:abx),
+    function(x) if_else(x == "1", "yes", "no", NA_character_)
+  )
+```
+
+```{r set_theme, include=FALSE}
+theme_session <- theme_bw() + theme(
+  plot.background = element_rect(fill = "#fffff8"), 
+  legend.background = element_rect(fill = "#fffff8"),
+  panel.background = element_rect(fill = "#fffff8"),
+  text = element_text(size = 20)
+)
+theme_set(theme_session)
+```
+
+## Summary
+```{r, fig.margin=TRUE, echo=FALSE}
+df_oeso %>% 
+  mutate(week_op = as.Date(cut.Date(surgery_date, "week"))) %>% 
+  count(week_op) %>% 
+  ggplot() +
+  geom_line(aes(x = week_op, y = n, group = 1)) +
+  geom_point(aes(x = week_op, y = n)) +
+  scale_y_continuous(breaks = pretty_breaks(3)) +
+  scale_x_date(breaks = "1 week") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  coord_cartesian(ylim = c(0, 3))
+  
+```
+
+The dataset contains `r nrow(df_oeso)` entries, spanning from `r min(df_oeso$surgery_date)` to 
+`r max(df_oeso$surgery_date)`. 
+
+### Extract of dataset
+```{r table_head}
+head(df_oeso, 5) %>% 
+  kable()
+```
+
+### Sum of missing values in each column (excluding "notes")
+```{r plot_nas, echo=FALSE, fig.margin=TRUE}
+plotNa <- function(dataFrame) {
+  tempDf <- as.data.frame(ifelse(is.na(dataFrame), 0, 1))
+  tempDf <- tempDf[, order(colSums(tempDf))]
+  tempData <- expand.grid(list(x = 1:nrow(tempDf), y = colnames(tempDf)))
+  tempData$v <- as.vector(as.matrix(tempDf))
+  tempData <- data.frame(x = unlist(tempData$x), y = unlist(tempData$y), v = unlist(tempData$v))
+  ggplot(tempData) + geom_tile(aes(x = x, y = y, fill = factor(v))) +
+    scale_fill_manual(values = c("white", "black"), name = "Missing value\n1=No, 0=Yes") + labs(x = "Rows of data set", y = "")
+}
+plotNa(df_oeso[, 1:5])
+  
+```
+
+```{r table_na}
+colSums(is.na(df_oeso[, -6])) %>% 
+  enframe(name = "", value = "NAs") %>% 
+  kable()
+```
+
+### Patients with pneumonia
+```{r pneumo_hist, fig.margin=TRUE}
+df_oeso %>%
+  ggplot(.) +
+  geom_bar(aes(x = pneumonia))
+  
+```
+```{r pneumo_table}
+table(Pneumonia = df_oeso$pneumonia, useNA = "ifany") %>% 
+  kable(.) 
+```
+
+### New requirement for oxygen therapy
+```{r oxy_hist, echo=FALSE, fig.margin=TRUE}
+df_oeso %>%
+  ggplot(.) +
+  geom_bar(aes(x = oxygen)) +
+  scale_y_continuous(breaks= pretty_breaks())
+  
+```
+```{r oxy_table, echo=FALSE}
+table(Oxygen = df_oeso$oxygen, useNA = "ifany") %>% 
+  kable(.) 
+```
+
+### New requirement for ventilation
+```{r vent_hist, echo=FALSE, fig.margin=TRUE}
+df_oeso %>%
+  ggplot(.) +
+  geom_bar(aes(x = ventilated))
+  
+```
+```{r vent_table, echo=FALSE}
+table(ventilated = df_oeso$ventlated, useNA = "ifany") %>% 
+  kable(.) 
+```
+
+### Need for IV antibiotics
+```{r abx_hist, echo=FALSE, fig.margin=TRUE}
+df_oeso %>%
+  ggplot(.) +
+  geom_bar(aes(x = abx))
+  
+```
+```{r abx_table, echo=FALSE}
+table(Abx = df_oeso$abx, useNA = "ifany") %>% 
+  kable(.) 
+```
+
+## Prepare data before merge
+The ERAS dataset (`df_srft`), was previously imported and cleaned. We now subset oesophagectomies and patients on ERAS pathway. The fact that this last column started to be collected time after, left blank values, that here are deemed as yes.
+```{r filter_oeso}
+eras_oeso <- df_srft %>%
+  filter(grepl("oesophagectomy", surgery) & (is.na(eras) | eras == "yes"))
+```
+
+Infec_7 reflects not only chest infections within 7 days after surgery; pulm_supp_24 referes to new requirement for oxygen or resp. support; pulm_supp_7 only includes resp. supp in 7 days, and only moderate or severe qualify as higher levels of resp. supp., as expressed in the .ppt; infect_24 captures if pt. is on IV abx.
+`r tint::margin_note("Keep only common columns with baseline dataset")`
+```{r eras_oeso_columns}
+eras_oeso <- eras_oeso %>%
+  select(surgery_date, infec_7, pulm_supp_24, pulm_supp_7, infec_24, notes = comment_7)
+```
+
+```{r echo=FALSE}
+select(eras_oeso, -notes) %>% 
+  head(5) %>% 
+  kable(caption = "Extract of subset eras data")
+```
+
+To stay in line with dichotomic criteria of answers in `df_oeso`, we need to modify `eras_oeso` before merging.
+
+`r tint::margin_note("If patient had chest infection, substitute by yes, else no")`
+```{r}
+eras_oeso <- eras_oeso %>% 
+  mutate(infec_7 = if_else(infec_7 == "chest", "yes", "no", NA_character_)) %>% 
+  rename(pneumonia = infec_7)
+```
+
+`r tint::margin_note("If patient was on IV abx on day 7, substitute by yes, else no")`
+```{r}
+eras_oeso <- eras_oeso %>%
+  mutate(infec_24 = if_else(infec_24 == "patient currently on iv antibiotics", "yes", "no", NA_character_)) %>%
+  rename(abx = infec_24)
+```
+
+As mentioned above `pulm_supp_24` and `pulm_supp_7` measure similar items but in at different times. `pulm_supp_24` can take values: `r unique(eras_oeso$pulm_supp_24)`. Whereas, `pulm_supp_7`: `r unique(eras_oeso$pulm_supp_7)`. 
+\newline
+The ERAS data collection form describes resp. supp. on day 7 as _[...] any advanced respiratory (including non-invasive ventilation or high flow nasal cannula) support that was not present before surgery_. In my opinion, this is closer to the criteria used in baseline data ( _escalation to higher levels of respiratory support_ ). 
+\newline
+Then, `pulm_supp_24` can be separated into 2 columns: resp. supp. (`ventilated`) and requirement for oxygen (`oxygen`). 
+
+`r tint::margin_note("Create two variables. Ventilated = yes if new requirement for respiratory support, else = no. Oxygen = yes if new requirement for oxygen, else = no. Remove pulm_supp_7 and pulm_supp_24 afterwards")`
+```{r}
+eras_oeso <- eras_oeso %>%
+  mutate(
+    ventilated = if_else(pulm_supp_24 == "new requirement for respiratory support", "yes", "no", NA_character_),
+    oxygen = if_else(pulm_supp_24 == "new requirement for oxygen", "yes", "no", NA_character_)
+  )
+eras_oeso <- select(eras_oeso, -pulm_supp_24, -pulm_supp_7)
+```
+
+`r tint::margin_note("Add columns to make baseline data identifiable")`
+```{r}
+df_oeso <- df_oeso %>% mutate(baseline = "yes")
+eras_oeso <- eras_oeso %>% mutate(baseline = "no")
+```
+
+## Merge and format
+We can now merge both datasets
+```{r}
+oeso_merged <- rbind(eras_oeso, df_oeso)
+```
+
+```{r echo=FALSE}
+select(oeso_merged, -notes) %>%
+  slice(., sample(nrow(.), 5)) %>%
+  kable(caption = "Extract of merged dataset")
+```
+
+We create a column with the year-month of surgery, that will let us calculate the rate of PPCs by month.
+```{r}
+oeso_merged$year_month <- format(oeso_merged$surgery_date, "%Y-%m")
+```
+
+## Plot
+### Rate of PPCs by month with median
+Here, confirmed pneumonias and/or ventilation are considered PPCs. 
+
+```{r fig.fullwidth = TRUE, fig.width=11}
+seq_months <- format(seq.Date(min(oeso_merged$surgery_date), max(oeso_merged$surgery_date), "month"), "%Y-%m") 
+## get a sequence of months from start of baseline to end of eras for X axis
+merged_ppc <- oeso_merged %>%
+  select(pneumonia, ventilated, oxygen, year_month, baseline) %>%
+  mutate(
+    ppc = case_when(
+      pneumonia == "yes" ~ "yes",
+      ventilated == "yes" ~ "yes",
+      is.na(pneumonia) & is.na(ventilated) ~ NA_character_,
+      TRUE ~ "no"
+    ),
+    year_month = factor(year_month, levels = seq_months)
+  ) %>%
+  group_by(baseline, year_month) %>%
+  summarise(
+    pts = n(),
+    ppc_n = sum(ppc == "yes", na.rm = TRUE),
+    ppc_rate = ppc_n / pts
+  )
+merged_ppc %>%
+  {
+    ggplot(., aes(x = year_month, y = ppc_rate)) +
+      geom_line(aes(colour = baseline, group = baseline)) +
+      geom_text(aes(label = pts), nudge_y = 0.04) +
+      scale_y_continuous(limits = c(0, 1)) +
+      scale_x_discrete(drop = FALSE) +
+      annotate("segment",
+        y = median(.[.$baseline == "yes", ]$ppc_rate, na.rm = TRUE),
+        yend = median(.[.$baseline == "yes", ]$ppc_rate, na.rm = TRUE),
+        x = min(as.character(.[.$baseline == "yes", ]$year_month), na.rm = TRUE),
+        xend = max(as.character(.[.$baseline == "yes", ]$year_month), na.rm = TRUE),
+        colour = "black", linetype = 2
+      ) + ## median baseline
+      annotate("segment",
+        y = median(.[.$baseline == "no", ]$ppc_rate, na.rm = TRUE),
+        yend = median(.[.$baseline == "no", ]$ppc_rate, na.rm = TRUE),
+        x = min(as.character(.[.$baseline == "no", ]$year_month), na.rm = TRUE),
+        xend = max(as.character(.[.$baseline == "no", ]$year_month), na.rm = TRUE), colour = "black", linetype = 2
+      ) + ## median post intervention
+      annotate("text", x = "2018-08", y = 0.64, label = "IS") +
+      annotate("segment",
+        x = "2018-08", xend = "2018-08", y = 0.61, yend = 0.48,
+        arrow = arrow(length = unit(0.03, "npc"))
+      ) +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.title = element_blank(),
+        legend.position = "bottom"
+      )
+  }
+  
+```
+_Note: First case of use of incentive spirometer: 2018-09-19. Started giving out IS 2018-08-18._
+
+### We can take a look at each dimension alone
+
+Pneumonias:
+
+```{r fig.fullwidth = TRUE, fig.width=11, echo=FALSE}
+oeso_merged %>%
+  select(pneumonia, year_month, baseline) %>%
+  mutate(year_month = factor(year_month, levels = seq_months)
+  ) %>%
+  group_by(year_month) %>%
+  mutate(
+    pts = n(),
+    pneu_n = sum(pneumonia == "yes", na.rm = TRUE),
+    pneu_rate = pneu_n / pts
+  ) %>%
+  {
+    ggplot(., aes(x = year_month, y = pneu_rate)) +
+      geom_line(aes(colour = baseline, group = baseline)) +
+      geom_text(aes(label = pts), nudge_y = 0.04) +
+      scale_y_continuous(limits = c(0, 1)) +
+      scale_x_discrete(drop = FALSE) +
+      annotate("segment",
+        y = median(.[.$baseline == "yes", ]$pneu_rate, na.rm = TRUE),
+        yend = median(.[.$baseline == "yes", ]$pneu_rate, na.rm = TRUE),
+        x = min(as.character(.[.$baseline == "yes", ]$year_month), na.rm = TRUE),
+        xend = max(as.character(.[.$baseline == "yes", ]$year_month), na.rm = TRUE),
+        colour = "black", linetype = 2
+      ) + ## median baseline
+      annotate("segment",
+        y = median(.[.$baseline == "no", ]$pneu_rate, na.rm = TRUE),
+        yend = median(.[.$baseline == "no", ]$pneu_rate, na.rm = TRUE),
+        x = min(as.character(.[.$baseline == "no", ]$year_month), na.rm = TRUE),
+        xend = max(as.character(.[.$baseline == "no", ]$year_month), na.rm = TRUE), colour = "black", linetype = 2
+      ) + ## median post intervention
+      annotate("text", x = "2018-08", y = 0.64, label = "IS") +
+      annotate("segment",
+        x = "2018-08", xend = "2018-08", y = 0.61, yend = 0.48,
+        arrow = arrow(length = unit(0.03, "npc"))
+      ) +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.title = element_blank(),
+        legend.position = "bottom"
+      )
+  }
+  
+```
+
+IV abx:
+
+```{r fig.fullwidth = TRUE, fig.width=11, echo=FALSE}
+oeso_merged %>%
+  select(abx, year_month, baseline) %>%
+  mutate(year_month = factor(year_month, levels = seq_months)
+  ) %>%
+  group_by(year_month) %>%
+  mutate(
+    pts = n(),
+    abx_n = sum(abx == "yes", na.rm = TRUE),
+    abx_rate = abx_n / pts
+  ) %>%
+  {
+    ggplot(., aes(x = year_month, y = abx_rate)) +
+      geom_line(aes(colour = baseline, group = baseline)) +
+      geom_text(aes(label = pts), nudge_y = 0.04) +
+      scale_y_continuous(limits = c(0, 1)) +
+      scale_x_discrete(drop = FALSE) +
+      annotate("segment",
+        y = median(.[.$baseline == "yes", ]$abx_rate, na.rm = TRUE),
+        yend = median(.[.$baseline == "yes", ]$abx_rate, na.rm = TRUE),
+        x = min(as.character(.[.$baseline == "yes", ]$year_month), na.rm = TRUE),
+        xend = max(as.character(.[.$baseline == "yes", ]$year_month), na.rm = TRUE),
+        colour = "black", linetype = 2
+      ) + ## median baseline
+      annotate("segment",
+        y = median(.[.$baseline == "no", ]$abx_rate, na.rm = TRUE),
+        yend = median(.[.$baseline == "no", ]$abx_rate, na.rm = TRUE),
+        x = min(as.character(.[.$baseline == "no", ]$year_month), na.rm = TRUE),
+        xend = max(as.character(.[.$baseline == "no", ]$year_month), na.rm = TRUE), colour = "black", linetype = 2
+      ) + ## median post intervention
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.title = element_blank(),
+        legend.position = "bottom"
+      )
+  }
+  
+```
+
+Ventilated:
+
+```{r fig.fullwidth = TRUE, fig.width=11, echo=FALSE}
+oeso_merged %>%
+  select(ventilated, year_month, baseline) %>%
+  mutate(year_month = factor(year_month, levels = seq_months)
+  ) %>%
+  group_by(year_month) %>%
+  mutate(
+    pts = n(),
+    vent_n = sum(ventilated == "yes", na.rm = TRUE),
+    vent_rate = vent_n / pts
+  ) %>%
+  {
+    ggplot(., aes(x = year_month, y = vent_rate)) +
+      geom_line(aes(colour = baseline, group = baseline)) +
+      geom_text(aes(label = pts), nudge_y = 0.04) +
+      scale_y_continuous(limits = c(0, 1)) +
+      scale_x_discrete(drop = FALSE) +
+      annotate("segment",
+        y = median(.[.$baseline == "yes", ]$vent_rate, na.rm = TRUE),
+        yend = median(.[.$baseline == "yes", ]$vent_rate, na.rm = TRUE),
+        x = min(as.character(.[.$baseline == "yes", ]$year_month), na.rm = TRUE),
+        xend = max(as.character(.[.$baseline == "yes", ]$year_month), na.rm = TRUE),
+        colour = "black", linetype = 2
+      ) + ## median baseline
+      annotate("segment",
+        y = median(.[.$baseline == "no", ]$vent_rate, na.rm = TRUE),
+        yend = median(.[.$baseline == "no", ]$vent_rate, na.rm = TRUE),
+        x = min(as.character(.[.$baseline == "no", ]$year_month), na.rm = TRUE),
+        xend = max(as.character(.[.$baseline == "no", ]$year_month), na.rm = TRUE), colour = "black", linetype = 2
+      ) + ## median post intervention
+      annotate("text", x = "2018-08", y = 0.39, label = "IS") +
+      annotate("segment",
+        x = "2018-08", xend = "2018-08", y = 0.37, yend = 0.27,
+        arrow = arrow(length = unit(0.03, "npc"))
+      ) +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.title = element_blank(),
+        legend.position = "bottom"
+      ) 
+  }
+  
+```
+
+
+Oxygen:
+
+```{r fig.fullwidth = TRUE, fig.width=11, echo=FALSE}
+oeso_merged %>%
+  select(oxygen, year_month, baseline) %>%
+  mutate(year_month = factor(year_month, levels = seq_months)
+  ) %>%
+  group_by(year_month) %>%
+  mutate(
+    pts = n(),
+    oxy_n = sum(oxygen == "yes", na.rm = TRUE),
+    oxy_rate = oxy_n / pts
+  ) %>%
+  {
+    ggplot(., aes(x = year_month, y = oxy_rate)) +
+      geom_line(aes(colour = baseline, group = baseline)) +
+      geom_text(aes(label = pts), nudge_y = 0.04) +
+      scale_y_continuous(limits = c(0, 1)) +
+      scale_x_discrete(drop = FALSE) +
+      annotate("segment",
+        y = median(.[.$baseline == "yes", ]$oxy_rate, na.rm = TRUE),
+        yend = median(.[.$baseline == "yes", ]$oxy_rate, na.rm = TRUE),
+        x = min(as.character(.[.$baseline == "yes", ]$year_month), na.rm = TRUE),
+        xend = max(as.character(.[.$baseline == "yes", ]$year_month), na.rm = TRUE),
+        colour = "black", linetype = 2
+      ) + ## median baseline
+      annotate("segment",
+        y = median(.[.$baseline == "no", ]$oxy_rate, na.rm = TRUE),
+        yend = median(.[.$baseline == "no", ]$oxy_rate, na.rm = TRUE),
+        x = min(as.character(.[.$baseline == "no", ]$year_month), na.rm = TRUE),
+        xend = max(as.character(.[.$baseline == "no", ]$year_month), na.rm = TRUE), colour = "black", linetype = 2
+      ) + ## median post intervention
+      annotate("text", x = "2018-08", y = 0.59, label = "IS") +
+      annotate("segment",
+        x = "2018-08", xend = "2018-08", y = 0.57, yend = 0.47,
+        arrow = arrow(length = unit(0.03, "npc"))
+      ) +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.title = element_blank(),
+        legend.position = "bottom"
+      )
+  }
+  
+```
+
+### We can also take a look at day of the week of surgery and the rate of each domain.
+
+```{r fig.fullwidth=TRUE, fig.width=11}
+oeso_merged %>%
+  select(-notes, -year_month) %>%
+  mutate(week_day = lubridate::wday(surgery_date, label = TRUE, week_start = 1)) %>%
+  gather(
+    key = "domain", value = "value",
+    pneumonia, abx, ventilated, oxygen, -baseline,
+    -surgery_date, -week_day, -baseline
+  ) %>%  
+  ## we get each one of 4 domains in one column coupled with its value
+  group_by(baseline, week_day, domain) %>%
+  ## group by baseline, then day of week and then domain
+  summarise(rate = sum(value == "yes", na.rm = TRUE) / n()) %>%
+  ## obtain the rate of ocurrence of each domain per day of week by dividing the number of "yes" in that domain that day by the number of patients who underwent surgery that day
+  ggplot() +
+  geom_raster(aes(x = domain, y = week_day, fill = rate)) +
+  scale_fill_viridis_c(alpha = 0.8) +
+  theme(axis.title = element_blank()) +
+  facet_wrap(vars(baseline), labeller = label_both) +
+  theme(legend.position = "bottom",
+        legend.key.width = unit(1.5, "cm"))
+  
+```
+
+### It can be interesting to look at rate of iCough compliance by the oesophagectomy patients
+
+```{r echo=FALSE}
+eras_compl <- df_srft %>%
+  filter(grepl("oesophagectomy", surgery) & (is.na(eras) | eras == "yes")) %>%
+  select(inc_spiro, t_brushes, m_washes, oral_diet, mobilised, month_surgery) %>%
+  # currently compliant means doing 4 out of 5
+  mutate(nas_columns = rowSums(is.na(dplyr::select(., 1:5)))) %>% 
+  # how many of the 5 variables got missing values
+  mutate(inc_spiro = if_else(inc_spiro %in% c(">two", "once", "twice"), 1, 0, NA_real_)) %>%
+  mutate_at(vars(t_brushes, m_washes), function(x) {
+    if_else(x == "twice", 1, 0, NA_real_)
+  }) %>%
+  mutate_at(vars(oral_diet, mobilised), function(x) {
+    if_else(x == "yes", 1, 0, NA_real_)
+  }) %>%
+  mutate(
+    compliance_n = rowSums(dplyr::select(., 1:5), na.rm = TRUE),
+    # how many items patient is compliant with
+    compliant = if_else(compliance_n >= 4, "yes", "no")
+  ) 
+```
+
+`r tint::margin_note("eras_compl contains all oesophagectomy patients from ERAS dataset and gathers variables relevant to iCough")`
+```{r fig.fullwidth=TRUE, fig.width=11}
+colours_lines <- c("Rate\nPPC" = "#f4a941", "Rate\ncompliance" = "#4192f4" )
+eras_compl %>%
+  group_by(month_surgery) %>%
+  summarise(
+    pts = n(),
+    compl_n = sum(compliant == "yes", na.rm = TRUE),
+    compl_rate = compl_n / pts
+  ) %>%
+  mutate(mediana = median(compl_rate)) %>%
+  {
+    ggplot(., aes(x = month_surgery, y = compl_rate)) +
+      geom_line(aes(group = 1, colour = "Rate\ncompliance")) +
+      geom_text(aes(label = pts), nudge_y = 0.04) +
+      scale_y_continuous(limits = c(0, 1)) +
+      annotate("text", x = "2018-08", y = 0.80, label = "IS") +
+      annotate("segment",
+        x = "2018-08", xend = "2018-08", y = 0.77, yend = 0.67,
+        arrow = arrow(length = unit(0.03, "npc"))
+      ) +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.title = element_blank(),
+        legend.position = "bottom",
+        legend.title = element_blank()
+      ) +
+      geom_line(data = filter(merged_ppc, baseline == "no"), 
+                aes(x = year_month, y = ppc_rate, group = 1, colour = "Rate\nPPC")) +
+      scale_colour_manual(values = colours_lines,
+                          guide = guide_legend(override.aes=aes(fill=NA)))
+  }
+```
