@@ -25,9 +25,9 @@ if (!dir.exists("./plots")) dir.create("./plots")
 # save "collated" sheet as .csv, name file as eras_srft and move manually to /data
 # remember to remove unpopulated rows
 na_list <- c(
-        0, "0", "", "NA", "na", "n/a", "<NA>", "not known/not recorded",
-        "not measured", "Not Measured", "none measured", "None Measured", "not done", "Not Done",
-        "n/d", "Not Recorded", "not recorded", "u/k", "unknown"
+  0, "0", "", "NA", "na", "n/a", "<NA>", "not known/not recorded",
+  "not measured", "Not Measured", "none measured", "None Measured", "not done", "Not Done",
+  "n/d", "Not Recorded", "not recorded", "u/k", "unknown"
 )
 # .csv encoding is WINDOWS-1252. Change to UTF-8
 data_path <- list.files("./data", pattern = "\\.csv", full.names = TRUE, ignore.case = TRUE)[[1]]
@@ -55,15 +55,15 @@ vars_adm <- c("age", "gender", "gm_eras_ele", "eras", "pqip_consent", "discharge
 
 # visualize missing data before replacing miss values with NA
 plotmiss <- function(dataFrame, na_values) {
-        tempDf <- as.data.frame(lapply(dataFrame, function(x) ifelse(x %in% na_values, 0, 1)))
-        tempDf <- tempDf[, order(colSums(tempDf))]
-        tempData <- expand.grid(list(x = 1:nrow(tempDf), y = colnames(tempDf)))
-        tempData$v <- as.vector(as.matrix(tempDf))
-        tempData <- data.frame(x = unlist(tempData$x), y = unlist(tempData$y), v = unlist(tempData$v))
-        ggplot(tempData) + geom_tile(aes(x=x, y=y, fill=factor(v))) +
-                scale_fill_manual(values=c("white", "black"), name="Not measured\n1=No, 0=Yes") +
-                theme_light() + ylab("") + xlab("Rows of data set") + ggtitle("")
-        
+  tempDf <- as.data.frame(lapply(dataFrame, function(x) ifelse(x %in% na_values, 0, 1)))
+  tempDf <- tempDf[, order(colSums(tempDf))]
+  tempData <- expand.grid(list(x = 1:nrow(tempDf), y = colnames(tempDf)))
+  tempData$v <- as.vector(as.matrix(tempDf))
+  tempData <- data.frame(x = unlist(tempData$x), y = unlist(tempData$y), v = unlist(tempData$v))
+  ggplot(tempData) + geom_tile(aes(x=x, y=y, fill=factor(v))) +
+    scale_fill_manual(values=c("white", "black"), name="Not measured\n1=No, 0=Yes") +
+    theme_light() + ylab("") + xlab("Rows of data set") + ggtitle("")
+  
 }
 
 not_rec_list <- c("not known/not recorded", "n/r",
@@ -101,12 +101,12 @@ df_srft[] <- lapply(df_srft, function(x) ifelse(x %in% na_list, NA, x))
 
 # Remove rows with empty values in all columns
 rem_row <- function(x) {
-        x[rowSums(is.na(x)) != ncol(x), ]
+  x[rowSums(is.na(x)) != ncol(x), ]
 }
 
 # Remove columns with empty values in all rows
 rem_col <- function(x) {
-        x[, colSums(is.na(x)) != nrow(x)]
+  x[, colSums(is.na(x)) != nrow(x)]
 }
 
 df_srft <- rem_row(df_srft)
@@ -152,12 +152,12 @@ df_srft$hospital_stay <- ifelse(df_srft$hospital_stay < 0, NA, df_srft$hospital_
 # true and false args must be same type, that's why as.Date(NA)
 
 df_srft[] <- lapply(df_srft, function(x) {
-        if (class(x) == "Date") {
-                dplyr::if_else(lubridate::year(x) < 2018, as.Date(NA), x)
-        }
-        else {
-                (x)
-        }
+  if (class(x) == "Date") {
+    dplyr::if_else(lubridate::year(x) < 2018, as.Date(NA), x)
+  }
+  else {
+    (x)
+  }
 })
 
 # biomarkers
@@ -253,561 +253,561 @@ table_weeks <- transform(table(df_srft$week_start))
 table_weeks$Var1 <- as.Date(table_weeks$Var1, format = "%Y-%m-%d")
 
 ggplot(data = table_weeks, aes(x = Var1, y = Freq)) + 
-        geom_point(size = 0.5) +
-        geom_line(aes(group = 1), colour = "#FF2700") +
-        scale_y_continuous(limits = c(0, 20)) +
-        scale_x_date(date_breaks = "1 week", date_labels = "%d-%b") +
-        labs(title = "Aggregated number of surgeries per week", 
-             caption = "Starting on monday") +
-        ylab("Count") + xlab("Week") +
-        theme_fivethirtyeight() +
-        theme(axis.text.x = element_text(angle = 45, vjust = 0.1))
+  geom_point(size = 0.5) +
+  geom_line(aes(group = 1), colour = "#FF2700") +
+  scale_y_continuous(limits = c(0, 20)) +
+  scale_x_date(date_breaks = "1 week", date_labels = "%d-%b") +
+  labs(title = "Aggregated number of surgeries per week", 
+       caption = "Starting on monday") +
+  ylab("Count") + xlab("Week") +
+  theme_fivethirtyeight() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.1))
 
 # aggregated number of surgeries per day of the week
 df_srft %>% 
-        mutate(day_week = lubridate::wday(df_srft$surgery_date, label = TRUE, week_start = 1)) %>% 
-        ggplot(data = ., aes(x = day_week)) +
-        geom_bar() +
-        scale_y_continuous(limits = c(0, 70)) +
-        labs(title = "Aggregated surgeries per\nday of the week",
-             caption = paste("From", min(df_srft$surgery_date, na.rm = TRUE), "to", max(df_srft$surgery_date, na.rm = TRUE))) +
-        ylab("Count") + xlab("Day of week") +
-        theme_fivethirtyeight()
+  mutate(day_week = lubridate::wday(df_srft$surgery_date, label = TRUE, week_start = 1)) %>% 
+  ggplot(data = ., aes(x = day_week)) +
+  geom_bar() +
+  scale_y_continuous(limits = c(0, 70)) +
+  labs(title = "Aggregated surgeries per\nday of the week",
+       caption = paste("From", min(df_srft$surgery_date, na.rm = TRUE), "to", max(df_srft$surgery_date, na.rm = TRUE))) +
+  ylab("Count") + xlab("Day of week") +
+  theme_fivethirtyeight()
 
 # same as above but proportions
 df_srft %>%
-        mutate(day_week = lubridate::wday(df_srft$surgery_date, label = TRUE, week_start = 1)) %>%
-        group_by(day_week) %>%
-        summarise(n = n()) %>%
-        mutate(rel_freq = n / sum(n)) %>%
-        ggplot(data = ., aes(x = day_week, y = rel_freq)) +
-        geom_col() +
-        scale_y_continuous(limits = c(0, 0.3)) +
-        labs(
-                title = "Rel. freq. surgeries per\nday of the week",
-                caption = paste("From", min(df_srft$surgery_date, na.rm = TRUE), "to", max(df_srft$surgery_date, na.rm = TRUE))
-        ) +
-        theme_fivethirtyeight()
+  mutate(day_week = lubridate::wday(df_srft$surgery_date, label = TRUE, week_start = 1)) %>%
+  group_by(day_week) %>%
+  summarise(n = n()) %>%
+  mutate(rel_freq = n / sum(n)) %>%
+  ggplot(data = ., aes(x = day_week, y = rel_freq)) +
+  geom_col() +
+  scale_y_continuous(limits = c(0, 0.3)) +
+  labs(
+    title = "Rel. freq. surgeries per\nday of the week",
+    caption = paste("From", min(df_srft$surgery_date, na.rm = TRUE), "to", max(df_srft$surgery_date, na.rm = TRUE))
+  ) +
+  theme_fivethirtyeight()
 
 # aggregated number of discharges per day of the week
 df_srft %>%
-        mutate(dis_day = lubridate::wday(df_srft$discharge_date, week_start = 1, label = TRUE)) %>%
-        ggplot(data = ., aes(x = dis_day)) +
-        geom_bar() +
-        # scale_y_continuous(limits = c(0, 30)) +
-        labs(title = "Aggregated number of D/C per day of week",
-             caption = paste("From", min(df_srft$discharge_date, na.rm = TRUE), "to", max(df_srft$discharge_date, na.rm = TRUE))) +
-        theme_fivethirtyeight()
+  mutate(dis_day = lubridate::wday(df_srft$discharge_date, week_start = 1, label = TRUE)) %>%
+  ggplot(data = ., aes(x = dis_day)) +
+  geom_bar() +
+  # scale_y_continuous(limits = c(0, 30)) +
+  labs(title = "Aggregated number of D/C per day of week",
+       caption = paste("From", min(df_srft$discharge_date, na.rm = TRUE), "to", max(df_srft$discharge_date, na.rm = TRUE))) +
+  theme_fivethirtyeight()
 
 # aggregated readmissions grouped by month of discharge
 # table(lubridate::month(df_srft[df_srft$readmit_30 == "yes", "discharge_date"], label = TRUE), useNA = "ifany")
 df_srft$monthyr_disc <- format(as.Date(df_srft$discharge_date), "%Y-%m")
 
 df_srft %>%
-        filter(readmit_30 == "yes") %>% 
-        dplyr::select(discharge_date, area_surgery, monthyr_disc) %>%
-        ggplot(data = ., aes(x = monthyr_disc)) +
-        geom_bar() +
-        theme_bw()
+  filter(readmit_30 == "yes") %>% 
+  dplyr::select(discharge_date, area_surgery, monthyr_disc) %>%
+  ggplot(data = ., aes(x = monthyr_disc)) +
+  geom_bar() +
+  theme_bw()
 
 # what proportion of patients were readmitted grouped by month of discharge?
 df_srft %>%
-        dplyr::select(surgery_date, readmit_30, area_surgery, monthyr_disc) %>%
-        na.omit() %>%
-        group_by(monthyr_disc, readmit_30) %>%
-        summarise(n = n()) %>%
-        mutate(rel_freq = n / sum(n)) %>%
-        ggplot(data = ., aes(x = monthyr_disc, y = rel_freq, fill = readmit_30)) +
-        geom_col() +
-        labs(
-                fill = "Readmitted?",
-                x = "", y= "") +
-        theme_bw()
+  dplyr::select(surgery_date, readmit_30, area_surgery, monthyr_disc) %>%
+  na.omit() %>%
+  group_by(monthyr_disc, readmit_30) %>%
+  summarise(n = n()) %>%
+  mutate(rel_freq = n / sum(n)) %>%
+  ggplot(data = ., aes(x = monthyr_disc, y = rel_freq, fill = readmit_30)) +
+  geom_col() +
+  labs(
+    fill = "Readmitted?",
+    x = "", y= "") +
+  theme_bw()
 
 # How many patients are compliant with at least 4 (out of 5) items of icough bundle?
 bundle_yes <- c(">two", "once", "twice", "yes")
 
 df_srft %>%
-        dplyr::select(inc_spiro, t_brushes, m_washes, oral_diet, mobilised) %>%
-        sapply(., function(x) {
-                if_else(x %in% bundle_yes, 1, 0)
-        }) %>%
-        as.data.frame(.) %>%
-        mutate(compliant = rowSums(.)) %>%
-        mutate(
-                compliant = if_else(compliant >= 4, "yes", "no"),
-                area_surgery = df_srft$area_surgery
-        ) %>%
-        ggplot(data = ., aes(x = compliant)) +
-        stat_count() +
-        labs(title = "Patients compliant with iCough bundle by area",
-             subtitle = "Compliant with 4 in 5: mobilisation, diet, mouth wash, teeth brush or IS") +
-        theme_fivethirtyeight() +
-        facet_wrap(vars(area_surgery), ncol = 2)
+  dplyr::select(inc_spiro, t_brushes, m_washes, oral_diet, mobilised) %>%
+  sapply(., function(x) {
+    if_else(x %in% bundle_yes, 1, 0)
+  }) %>%
+  as.data.frame(.) %>%
+  mutate(compliant = rowSums(.)) %>%
+  mutate(
+    compliant = if_else(compliant >= 4, "yes", "no"),
+    area_surgery = df_srft$area_surgery
+  ) %>%
+  ggplot(data = ., aes(x = compliant)) +
+  stat_count() +
+  labs(title = "Patients compliant with iCough bundle by area",
+       subtitle = "Compliant with 4 in 5: mobilisation, diet, mouth wash, teeth brush or IS") +
+  theme_fivethirtyeight() +
+  facet_wrap(vars(area_surgery), ncol = 2)
 
 # what icough item patients are less compliant with by area
 df_srft %>%
-        dplyr::select(inc_spiro, t_brushes, m_washes, oral_diet, mobilised) %>%
-        sapply(., function(x) {
-                if_else(x %in% bundle_yes, 1, 0)
-        }) %>%
-        as.data.frame(.) %>%
-        mutate(compliant = rowSums(.)) %>%
-        mutate(
-                compliant = if_else(compliant >= 4, "yes", "no"),
-                area_surgery = df_srft$area_surgery
-        ) %>%
-        rename(is = inc_spiro, tb = t_brushes, mob = mobilised, 
-               mw = m_washes, diet = oral_diet) %>% 
-        group_by(compliant, area_surgery) %>% 
-        summarise_at(., .vars = 1:5, .funs = sum) %>% 
-        gather(key, value, -compliant, -area_surgery) %>% 
-        ggplot(data = .) + 
-        geom_col(aes(x = key, y = value)) +
-        facet_wrap(vars(area_surgery, compliant), scales = "free_x", ncol = 2) +
-        labs(title = "icough items compliance by area") +
-        theme_fivethirtyeight()
+  dplyr::select(inc_spiro, t_brushes, m_washes, oral_diet, mobilised) %>%
+  sapply(., function(x) {
+    if_else(x %in% bundle_yes, 1, 0)
+  }) %>%
+  as.data.frame(.) %>%
+  mutate(compliant = rowSums(.)) %>%
+  mutate(
+    compliant = if_else(compliant >= 4, "yes", "no"),
+    area_surgery = df_srft$area_surgery
+  ) %>%
+  rename(is = inc_spiro, tb = t_brushes, mob = mobilised, 
+         mw = m_washes, diet = oral_diet) %>% 
+  group_by(compliant, area_surgery) %>% 
+  summarise_at(., .vars = 1:5, .funs = sum) %>% 
+  gather(key, value, -compliant, -area_surgery) %>% 
+  ggplot(data = .) + 
+  geom_col(aes(x = key, y = value)) +
+  facet_wrap(vars(area_surgery, compliant), scales = "free_x", ncol = 2) +
+  labs(title = "icough items compliance by area") +
+  theme_fivethirtyeight()
 
 # What proportion of patients who were still in hospital on day 7 had any infectious complication by week?
 compl_yes <- c("abdominal leak", "chest", "surgical site infection", "empirical", "urine")
 df_srft %>% 
-        dplyr::select(infec_7, week_start) %>% 
-        filter(!is.na(infec_7)) %>%
-        mutate(complication = if_else(infec_7 %in% compl_yes, 1, 0),
-               week_start = as.Date(week_start, format = "%Y-%m-%d")) %>%
-        group_by(week_start) %>% 
-        summarise(n_pts = n(), freq_compl = sum(complication)/n(), n_compl = sum(complication)) %>% 
-        ggplot(data = .,aes(x = week_start, y = freq_compl)) +
-        geom_line(aes(group = 1), colour = "#FF2700") +
-        scale_x_date(date_breaks = "1 week", date_labels = "%d-%b") +
-        geom_point(size = 0.8) +
-        labs(title = "[0, 1] prop. of pts. who were in hosp. at day 7 and\nhad any type of complication") +
-        geom_text(aes(label = n_pts), size = 3, vjust = 0, nudge_y = 0.05) +
-        theme_fivethirtyeight() +
-        theme(axis.text.x = element_text(angle = 90, vjust = 0.1))
+  dplyr::select(infec_7, week_start) %>% 
+  filter(!is.na(infec_7)) %>%
+  mutate(complication = if_else(infec_7 %in% compl_yes, 1, 0),
+         week_start = as.Date(week_start, format = "%Y-%m-%d")) %>%
+  group_by(week_start) %>% 
+  summarise(n_pts = n(), freq_compl = sum(complication)/n(), n_compl = sum(complication)) %>% 
+  ggplot(data = .,aes(x = week_start, y = freq_compl)) +
+  geom_line(aes(group = 1), colour = "#FF2700") +
+  scale_x_date(date_breaks = "1 week", date_labels = "%d-%b") +
+  geom_point(size = 0.8) +
+  labs(title = "[0, 1] prop. of pts. who were in hosp. at day 7 and\nhad any type of complication") +
+  geom_text(aes(label = n_pts), size = 3, vjust = 0, nudge_y = 0.05) +
+  theme_fivethirtyeight() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.1))
 
 # Top 5 surgeons by number of surgeries
 surgeons_df <- transform(table(unlist(strsplit(df_srft$surgeon, ",\\s"))))
 
 surgeons_df %>% 
-        arrange(., desc(Freq)) %>% 
-        filter(between(row_number(), 1, 5)) %>% 
-        mutate(Var1 = factor(.$Var1, levels = .$Var1[order(.$Freq)])) %>% 
-        ggplot(data = ., aes(x = Var1, y = Freq)) + 
-        geom_col() +
-        scale_y_continuous(breaks = seq(min(surgeons_df$Freq, na.rm = TRUE), max(surgeons_df$Freq, na.rm = TRUE), 2)) +
-        labs(title = "Top 5 surgeons by n. of surgeries") +
-        theme_fivethirtyeight() +
-        coord_flip()
+  arrange(., desc(Freq)) %>% 
+  filter(between(row_number(), 1, 5)) %>% 
+  mutate(Var1 = factor(.$Var1, levels = .$Var1[order(.$Freq)])) %>% 
+  ggplot(data = ., aes(x = Var1, y = Freq)) + 
+  geom_col() +
+  scale_y_continuous(breaks = seq(min(surgeons_df$Freq, na.rm = TRUE), max(surgeons_df$Freq, na.rm = TRUE), 2)) +
+  labs(title = "Top 5 surgeons by n. of surgeries") +
+  theme_fivethirtyeight() +
+  coord_flip()
 
 # functions to plot numeric and categorical columns 
 df_num <- df_srft[, sapply(df_srft, is.numeric)]
 df_char <- df_srft[, sapply(df_srft, is.character)]  
 # columns like comment, surgery or surgeon shouldn't be plotted with second func
 plotNum <- function(datain, ii) {
-        plots_list <- list()
-        for (i in ii) {
-                plot <- ggplot(data = data.frame(x = datain[[i]]), aes(x = x)) + 
-                        stat_bin(na.rm = TRUE) +
-                        theme_fivethirtyeight() +
-                        labs(subtitle = colnames(datain)[i],
-                             caption = paste("NAs: ", sum(is.na(datain[[i]])),"/", nrow(datain)))
-                plots_list <- c(plots_list, list(plot))
-        }
-        
-        do.call("grid.arrange", c(plots_list, ncol = 2))
+  plots_list <- list()
+  for (i in ii) {
+    plot <- ggplot(data = data.frame(x = datain[[i]]), aes(x = x)) + 
+      stat_bin(na.rm = TRUE) +
+      theme_fivethirtyeight() +
+      labs(subtitle = colnames(datain)[i],
+           caption = paste("NAs: ", sum(is.na(datain[[i]])),"/", nrow(datain)))
+    plots_list <- c(plots_list, list(plot))
+  }
+  
+  do.call("grid.arrange", c(plots_list, ncol = 2))
 }
 
 plotCat <- function(datain, ii) {
-        plots_list <- list()
-        for (i in ii) {
-                plot <- ggplot(data = data.frame(x = datain[[i]]), aes(x = x)) + 
-                        geom_bar(na.rm = TRUE, position = "dodge") +
-                        theme_fivethirtyeight() +
-                        labs(subtitle = colnames(datain)[i]) +
-                        theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
-                plots_list <- c(plots_list, list(plot))
-        }
-        
-        do.call("grid.arrange", c(plots_list, ncol = 2))
+  plots_list <- list()
+  for (i in ii) {
+    plot <- ggplot(data = data.frame(x = datain[[i]]), aes(x = x)) + 
+      geom_bar(na.rm = TRUE, position = "dodge") +
+      theme_fivethirtyeight() +
+      labs(subtitle = colnames(datain)[i]) +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+    plots_list <- c(plots_list, list(plot))
+  }
+  
+  do.call("grid.arrange", c(plots_list, ncol = 2))
 }
 
 # Plots LOS ---------------------------------------------------------------
 # Avg LOS per month of surgery
 df_srft$monthyr_surg <- format(as.Date(df_srft$surgery_date), "%Y-%m")
 df_srft %>%
-        dplyr::select(monthyr_surg, hospital_stay, area_surgery) %>%
-        filter(area_surgery == "urology and endocrinology") %>% 
-        mutate(stay = hospital_stay) %>%
-        na.omit() %>%
-        group_by(monthyr_surg) %>%
-        summarise(avg_los = mean(stay, na.rm = TRUE),
-                  n = n()) %>%
-        ggplot(data = ., aes(x = monthyr_surg, y = avg_los)) +
-        geom_line(aes(group = 1), colour = "#FF2700") +
-        geom_point(size = 0.2) +
-        scale_y_continuous(limits = c(0, 20)) +
-        geom_text(aes(label = n), size = 3, vjust = -0.5, nudge_y = 0.1) +
-        ylab("Average") +
-        xlab("Month of surgery") +
-        # labs(
-        #      caption = paste("Last D/C:", max(df_srft$discharge_date, na.rm = TRUE))) +
-        theme_bw()
+  dplyr::select(monthyr_surg, hospital_stay, area_surgery) %>%
+  filter(area_surgery == "urology and endocrinology") %>% 
+  mutate(stay = hospital_stay) %>%
+  na.omit() %>%
+  group_by(monthyr_surg) %>%
+  summarise(avg_los = mean(stay, na.rm = TRUE),
+            n = n()) %>%
+  ggplot(data = ., aes(x = monthyr_surg, y = avg_los)) +
+  geom_line(aes(group = 1), colour = "#FF2700") +
+  geom_point(size = 0.2) +
+  scale_y_continuous(limits = c(0, 20)) +
+  geom_text(aes(label = n), size = 3, vjust = -0.5, nudge_y = 0.1) +
+  ylab("Average") +
+  xlab("Month of surgery") +
+  # labs(
+  #      caption = paste("Last D/C:", max(df_srft$discharge_date, na.rm = TRUE))) +
+  theme_bw()
 
 # Avg LOS per area (aggregate(x = df_srft$hospital_stay, by = list(df_srft$area_surgery), FUN = mean, na.rm = TRUE))
 df_srft %>% 
-        dplyr::select(area_surgery, hospital_stay) %>%
-        group_by(area_surgery) %>% 
-        summarise(avg_los = mean(hospital_stay, na.rm = TRUE), 
-                  sdev = sd(hospital_stay, na.rm = TRUE)) %>%
-        ggplot(data = .) + 
-        geom_col(aes(x = area_surgery, y = avg_los)) +
-        geom_errorbar(aes(x = area_surgery, ymin = avg_los - sdev, ymax = avg_los + sdev), 
-                      na.rm = TRUE,
-                      width = .08) +
-        scale_y_continuous(limits = c(0, 20), breaks = seq(0, 20, 5)) +
-        labs(title = "Mean LoS and SD per area", 
-             caption = paste("Last D/C:", max(df_srft$discharge_date, na.rm = TRUE))) +
-        theme_fivethirtyeight()
+  dplyr::select(area_surgery, hospital_stay) %>%
+  group_by(area_surgery) %>% 
+  summarise(avg_los = mean(hospital_stay, na.rm = TRUE), 
+            sdev = sd(hospital_stay, na.rm = TRUE)) %>%
+  ggplot(data = .) + 
+  geom_col(aes(x = area_surgery, y = avg_los)) +
+  geom_errorbar(aes(x = area_surgery, ymin = avg_los - sdev, ymax = avg_los + sdev), 
+                na.rm = TRUE,
+                width = .08) +
+  scale_y_continuous(limits = c(0, 20), breaks = seq(0, 20, 5)) +
+  labs(title = "Mean LoS and SD per area", 
+       caption = paste("Last D/C:", max(df_srft$discharge_date, na.rm = TRUE))) +
+  theme_fivethirtyeight()
 
 # Same as above but median absolute deviation
 df_srft %>% 
-        dplyr::select(area_surgery, hospital_stay) %>%
-        group_by(area_surgery) %>% 
-        summarise(med_los = median(hospital_stay, na.rm = TRUE), 
-                  mad_los = mad(hospital_stay, na.rm = TRUE)) %>%
-        ggplot(data = .) + 
-        geom_col(aes(x = area_surgery, y = med_los)) +
-        geom_errorbar(aes(x = area_surgery, ymin = med_los - mad_los, ymax = med_los + mad_los), 
-                      na.rm = TRUE,
-                      width = .08) +
-        scale_y_continuous(limits = c(0, 20), breaks = seq(0, 20, 5)) +
-        labs(title = "Median LoS and median absolute deviation per area", 
-             caption = paste("Last D/C:", max(df_srft$discharge_date, na.rm = TRUE))) +
-        theme_fivethirtyeight()
+  dplyr::select(area_surgery, hospital_stay) %>%
+  group_by(area_surgery) %>% 
+  summarise(med_los = median(hospital_stay, na.rm = TRUE), 
+            mad_los = mad(hospital_stay, na.rm = TRUE)) %>%
+  ggplot(data = .) + 
+  geom_col(aes(x = area_surgery, y = med_los)) +
+  geom_errorbar(aes(x = area_surgery, ymin = med_los - mad_los, ymax = med_los + mad_los), 
+                na.rm = TRUE,
+                width = .08) +
+  scale_y_continuous(limits = c(0, 20), breaks = seq(0, 20, 5)) +
+  labs(title = "Median LoS and median absolute deviation per area", 
+       caption = paste("Last D/C:", max(df_srft$discharge_date, na.rm = TRUE))) +
+  theme_fivethirtyeight()
 
 # LoS distribution
 df_srft %>%
-        dplyr::select(area_surgery, hospital_stay) %>%
-        ggplot(data = .) +
-        stat_bin(aes(x = hospital_stay), binwidth = 1) +
-        scale_x_continuous(breaks = seq(min(df_srft$hospital_stay, na.rm = TRUE), max(df_srft$hospital_stay, na.rm = TRUE), 3)) +
-        scale_y_continuous(limits = c(0, 25), breaks = seq(0, 25, 5)) +
-        labs(
-                title = "LoS distribution",
-                caption = paste("Last D/C:", max(df_srft$discharge_date, na.rm = TRUE))
-        ) +
-        theme_fivethirtyeight()
+  dplyr::select(area_surgery, hospital_stay) %>%
+  ggplot(data = .) +
+  stat_bin(aes(x = hospital_stay), binwidth = 1) +
+  scale_x_continuous(breaks = seq(min(df_srft$hospital_stay, na.rm = TRUE), max(df_srft$hospital_stay, na.rm = TRUE), 3)) +
+  scale_y_continuous(limits = c(0, 25), breaks = seq(0, 25, 5)) +
+  labs(
+    title = "LoS distribution",
+    caption = paste("Last D/C:", max(df_srft$discharge_date, na.rm = TRUE))
+  ) +
+  theme_fivethirtyeight()
 
 # LOS distribution per area
 los_back <- subset(df_srft, select = -area_surgery)
 
 ggplot(data = df_srft, aes(x = hospital_stay, fill = area_surgery)) +
-        geom_histogram(colour = "black", binwidth = 1) +
-        geom_histogram(data = los_back, fill = "grey", alpha = .5, binwidth = 1) +
-        scale_x_continuous(breaks = seq(min(df_srft$hospital_stay, na.rm = TRUE), max(df_srft$hospital_stay, na.rm = TRUE), 2)) +
-        labs(
-                title = "LOS per area",
-                caption = paste("Last D/C:", max(df_srft$discharge_date, na.rm = TRUE))
-        ) +
-        facet_wrap(vars(area_surgery), ncol = 2, scales = "free_y") +
-        theme_fivethirtyeight() +
-        guides(fill = FALSE)
+  geom_histogram(colour = "black", binwidth = 1) +
+  geom_histogram(data = los_back, fill = "grey", alpha = .5, binwidth = 1) +
+  scale_x_continuous(breaks = seq(min(df_srft$hospital_stay, na.rm = TRUE), max(df_srft$hospital_stay, na.rm = TRUE), 2)) +
+  labs(
+    title = "LOS per area",
+    caption = paste("Last D/C:", max(df_srft$discharge_date, na.rm = TRUE))
+  ) +
+  facet_wrap(vars(area_surgery), ncol = 2, scales = "free_y") +
+  theme_fivethirtyeight() +
+  guides(fill = FALSE)
 # geom_text(stat = "count", aes(label = ..count.., y = ..count..), vjust = -.5)
 
 # LOS grouped by icough items complied with
 df_srft %>% dplyr::select(inc_spiro, m_washes, t_brushes, oral_diet, mobilised, hospital_stay) %>% 
-        mutate(inc_spiro = if_else(inc_spiro %in% bundle_yes, 1, 0),
-               m_washes = if_else(m_washes == "twice", 1, 0),
-               t_brushes = if_else(t_brushes == "twice", 1, 0),
-               oral_diet = if_else(oral_diet == "yes", 1, 0),
-               mobilised = if_else(mobilised == "yes", 1, 0)
-        ) %>% 
-        na.omit() %>% 
-        mutate(compl_group = rowSums(dplyr::select(., 1:5))) %>%
-        mutate_at(vars(compl_group), as.character) %>% 
-        ggplot(., aes(y = hospital_stay, x = compl_group, colour = compl_group)) +
-        scale_y_continuous(
-                breaks = seq(min(df_srft$hospital_stay, na.rm = TRUE),
-                             max(df_srft$hospital_stay, na.rm = TRUE), 3)) +
-        geom_jitter(width = 0.25) +
-        theme_fivethirtyeight() +
-        labs(title = "Number of iCough items complied with and hospital stay\nwithin 24h after surgery",
-             caption = paste("From", min(df_srft$surgery_date, na.rm = TRUE), "to", max(df_srft$surgery_date, na.rm = TRUE))) +
-        theme(legend.position = "none")
+  mutate(inc_spiro = if_else(inc_spiro %in% bundle_yes, 1, 0),
+         m_washes = if_else(m_washes == "twice", 1, 0),
+         t_brushes = if_else(t_brushes == "twice", 1, 0),
+         oral_diet = if_else(oral_diet == "yes", 1, 0),
+         mobilised = if_else(mobilised == "yes", 1, 0)
+  ) %>% 
+  na.omit() %>% 
+  mutate(compl_group = rowSums(dplyr::select(., 1:5))) %>%
+  mutate_at(vars(compl_group), as.character) %>% 
+  ggplot(., aes(y = hospital_stay, x = compl_group, colour = compl_group)) +
+  scale_y_continuous(
+    breaks = seq(min(df_srft$hospital_stay, na.rm = TRUE),
+                 max(df_srft$hospital_stay, na.rm = TRUE), 3)) +
+  geom_jitter(width = 0.25) +
+  theme_fivethirtyeight() +
+  labs(title = "Number of iCough items complied with and hospital stay\nwithin 24h after surgery",
+       caption = paste("From", min(df_srft$surgery_date, na.rm = TRUE), "to", max(df_srft$surgery_date, na.rm = TRUE))) +
+  theme(legend.position = "none")
 
 # Same as above but area of surgery is given a colour
 df_srft %>% dplyr::select(inc_spiro, m_washes, t_brushes, oral_diet, mobilised, hospital_stay, area_surgery) %>% 
-        mutate(inc_spiro = if_else(inc_spiro %in% bundle_yes, 1, 0),
-               m_washes = if_else(m_washes == "twice", 1, 0),
-               t_brushes = if_else(t_brushes == "twice", 1, 0),
-               oral_diet = if_else(oral_diet == "yes", 1, 0),
-               mobilised = if_else(mobilised == "yes", 1, 0)
-        ) %>% 
-        na.omit() %>% 
-        mutate(compl_group = rowSums(dplyr::select(., 1:5))) %>%
-        mutate_at(vars(compl_group), as.character) %>% 
-        ggplot(., aes(y = hospital_stay, x = compl_group, colour = area_surgery)) +
-        scale_y_continuous(
-                breaks = seq(min(df_srft$hospital_stay, na.rm = TRUE),
-                             max(df_srft$hospital_stay, na.rm = TRUE), 3)) +
-        geom_jitter(width = 0.25) +
-        theme_fivethirtyeight() +
-        labs(title = "Number of iCough items complied with and hospital stay\nwithin 24h after surgery",
-             caption = paste("From", min(df_srft$surgery_date, na.rm = TRUE), "to", max(df_srft$surgery_date, na.rm = TRUE))) +
-        theme(legend.position = "right",
-              legend.direction = "vertical")
+  mutate(inc_spiro = if_else(inc_spiro %in% bundle_yes, 1, 0),
+         m_washes = if_else(m_washes == "twice", 1, 0),
+         t_brushes = if_else(t_brushes == "twice", 1, 0),
+         oral_diet = if_else(oral_diet == "yes", 1, 0),
+         mobilised = if_else(mobilised == "yes", 1, 0)
+  ) %>% 
+  na.omit() %>% 
+  mutate(compl_group = rowSums(dplyr::select(., 1:5))) %>%
+  mutate_at(vars(compl_group), as.character) %>% 
+  ggplot(., aes(y = hospital_stay, x = compl_group, colour = area_surgery)) +
+  scale_y_continuous(
+    breaks = seq(min(df_srft$hospital_stay, na.rm = TRUE),
+                 max(df_srft$hospital_stay, na.rm = TRUE), 3)) +
+  geom_jitter(width = 0.25) +
+  theme_fivethirtyeight() +
+  labs(title = "Number of iCough items complied with and hospital stay\nwithin 24h after surgery",
+       caption = paste("From", min(df_srft$surgery_date, na.rm = TRUE), "to", max(df_srft$surgery_date, na.rm = TRUE))) +
+  theme(legend.position = "right",
+        legend.direction = "vertical")
 
 # Day of the week of surgery and LOS
 # makes sense that complex surgeries are not usually placed on fridays as there is less medical resources available
 # seems reasonable to think that complex cases, therefore with higher risk of morbidities, will require more LoS
 # complex surgeries are obviously placed on days of the week from where there's a long uninterrupted care with high resources available
 df_srft %>% 
-        dplyr::select(surgery_date, 
-                      hospital_stay) %>% 
-        mutate(day_week = lubridate::wday(surgery_date, label = TRUE, week_start = 1)) %>% 
-        na.omit() %>% 
-        ggplot(., aes(x = day_week, y = hospital_stay, colour = day_week)) +
-        scale_y_continuous(
-                breaks = seq(min(df_srft$hospital_stay, na.rm = TRUE),
-                             max(df_srft$hospital_stay, na.rm = TRUE), 3)) +
-        geom_jitter(width = 0.25) +
-        theme_fivethirtyeight() +
-        theme(legend.position = "none")
+  dplyr::select(surgery_date, 
+                hospital_stay) %>% 
+  mutate(day_week = lubridate::wday(surgery_date, label = TRUE, week_start = 1)) %>% 
+  na.omit() %>% 
+  ggplot(., aes(x = day_week, y = hospital_stay, colour = day_week)) +
+  scale_y_continuous(
+    breaks = seq(min(df_srft$hospital_stay, na.rm = TRUE),
+                 max(df_srft$hospital_stay, na.rm = TRUE), 3)) +
+  geom_jitter(width = 0.25) +
+  theme_fivethirtyeight() +
+  theme(legend.position = "none")
 
 # Infectious complication within 7 days and LOS
 compl_yes <- c("abdominal leak", "chest", "surgical site infection", "empirical", "urine")
 df_srft %>% 
-        dplyr::select(infec_7, hospital_stay) %>% 
-        na.omit() %>% 
-        mutate(complication = if_else(infec_7 %in% compl_yes, "yes", "no")) %>%
-        ggplot(., aes(x = complication, y = hospital_stay)) +
-        scale_y_continuous(
-                breaks = seq(min(df_srft$hospital_stay, na.rm = TRUE),
-                             max(df_srft$hospital_stay, na.rm = TRUE), 3)) +
-        geom_jitter(width = 0.25) +
-        theme_fivethirtyeight() +
-        theme(text = element_text(size = 25)) +
-        coord_flip()
+  dplyr::select(infec_7, hospital_stay) %>% 
+  na.omit() %>% 
+  mutate(complication = if_else(infec_7 %in% compl_yes, "yes", "no")) %>%
+  ggplot(., aes(x = complication, y = hospital_stay)) +
+  scale_y_continuous(
+    breaks = seq(min(df_srft$hospital_stay, na.rm = TRUE),
+                 max(df_srft$hospital_stay, na.rm = TRUE), 3)) +
+  geom_jitter(width = 0.25) +
+  theme_fivethirtyeight() +
+  theme(text = element_text(size = 25)) +
+  coord_flip()
 
 # POMS and LOS
 df_srft %>%
-        dplyr::select(
-                pulm_supp_24, infec_24, renal_24, gastro, cardio_24, neuro,
-                haemato, wound, pain, hospital_stay
-        ) %>% 
-        na.omit() %>%  ## there are pts with day 7 items completed and not d/c
-        mutate_at(
-                .vars = vars(-hospital_stay),
-                .funs = function(x) 
-                        if_else(x == "none of the above", 0, 1)
-                
-        ) %>%
-        mutate(morbid = rowSums(dplyr::select(., 1:9))) %>%
-        ggplot(., aes(x = as.factor(morbid), y = hospital_stay, colour = as.factor(morbid))) +
-        geom_jitter(width = 0.25) +
-        scale_y_continuous(breaks = seq(min(df_srft$hospital_stay, na.rm = TRUE),
-                                        max(df_srft$hospital_stay, na.rm = TRUE), 3)) +
-        theme_fivethirtyeight() +
-        theme(legend.position = "none")
+  dplyr::select(
+    pulm_supp_24, infec_24, renal_24, gastro, cardio_24, neuro,
+    haemato, wound, pain, hospital_stay
+  ) %>% 
+  na.omit() %>%  ## there are pts with day 7 items completed and not d/c
+  mutate_at(
+    .vars = vars(-hospital_stay),
+    .funs = function(x) 
+      if_else(x == "none of the above", 0, 1)
+    
+  ) %>%
+  mutate(morbid = rowSums(dplyr::select(., 1:9))) %>%
+  ggplot(., aes(x = as.factor(morbid), y = hospital_stay, colour = as.factor(morbid))) +
+  geom_jitter(width = 0.25) +
+  scale_y_continuous(breaks = seq(min(df_srft$hospital_stay, na.rm = TRUE),
+                                  max(df_srft$hospital_stay, na.rm = TRUE), 3)) +
+  theme_fivethirtyeight() +
+  theme(legend.position = "none")
 
 # ERAS+ Dashboard measures for Haelo --------------------------------------
 measures_plots <- list()
 # What proportion of pts. attended Surgery School prior to admission?
 measures_plots <- c(measures_plots, list(
-        df_srft %>%
-                dplyr::select(chest_physio, week_start, area_surgery) %>%
-                filter(area_surgery == "urology and endocrinology") %>% 
-                mutate(chest_physio = if_else(chest_physio %in% c("nurse", "surgery school", "doctor"), 1, 0)) %>%
-                group_by(week_start) %>%
-                summarise(school_prop = sum(chest_physio) / n(),
-                          n = n()) %>%
-                ggplot(data = ., aes(x = as.Date(week_start, format = "%Y-%m-%d"), y = school_prop)) +
-                geom_line(colour = "#FF2700") +
-                geom_point(size = 1) +
-                geom_line(colour = "#FF2700", group = 1) +
-                geom_point(size = 1) +
-                geom_text(aes(label = n), size = 3,nudge_x = 0, nudge_y = 0.08) +
-                scale_x_date(date_breaks = "1 week", date_labels = "%b-%d") +
-                scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.25)) +
-                labs(
-                        x="Week starting", y = "Proportion"
-                ) +
-                theme_bw() +
-                theme(axis.text.x = element_text(angle = 45, hjust = 1))
-        
+  df_srft %>%
+    dplyr::select(chest_physio, week_start, area_surgery) %>%
+    filter(area_surgery == "urology and endocrinology") %>% 
+    mutate(chest_physio = if_else(chest_physio %in% c("nurse", "surgery school", "doctor"), 1, 0)) %>%
+    group_by(week_start) %>%
+    summarise(school_prop = sum(chest_physio) / n(),
+              n = n()) %>%
+    ggplot(data = ., aes(x = as.Date(week_start, format = "%Y-%m-%d"), y = school_prop)) +
+    geom_line(colour = "#FF2700") +
+    geom_point(size = 1) +
+    geom_line(colour = "#FF2700", group = 1) +
+    geom_point(size = 1) +
+    geom_text(aes(label = n), size = 3,nudge_x = 0, nudge_y = 0.08) +
+    scale_x_date(date_breaks = "1 week", date_labels = "%b-%d") +
+    scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.25)) +
+    labs(
+      x="Week starting", y = "Proportion"
+    ) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
 ))
 # Proportion of pts. with PPC within 7 days
 df_srft %>% dplyr::select(area_surgery, surgery_date, infec_7, pulm_supp_7, week_start) %>% 
-        filter(area_surgery == "urology and endocrinology" & !is.na(infec_7)) %>% 
-        mutate(infec_7 = if_else(infec_7 == "chest", 1, 0),
-               pulm_supp_7 = if_else(pulm_supp_7 %in% c("mild", "moderate", "severe"), 1, 0)) %>% 
-        mutate(ppc = if_else(infec_7 == 1 | pulm_supp_7 == 1, 1, 0)) %>% 
-        group_by(week_start) %>%
-        summarise(denominator = n(), 
-                  numerator = sum(ppc),
-                  prop = sum(ppc) / n(),
-                  n=n()) %>% 
-        ggplot(data = ., aes(x = as.Date(week_start, format = "%Y-%m-%d"), y = prop)) +
-        geom_line(colour = "#FF2700") +
-        geom_point(size = 1) +
-        # geom_hline(aes(yintercept = median(prop)), linetype = 2) +
-        geom_text(aes(label = n), size = 3,nudge_x = 0, nudge_y = 0.08) +
-        scale_x_date(date_breaks = "1 week", date_labels = "%b-%d") +
-        scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.25)) +
-        labs(
-                x="Week starting", y = "Proportion"
-        ) +
-        theme_bw() +
-        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  filter(area_surgery == "urology and endocrinology" & !is.na(infec_7)) %>% 
+  mutate(infec_7 = if_else(infec_7 == "chest", 1, 0),
+         pulm_supp_7 = if_else(pulm_supp_7 %in% c("mild", "moderate", "severe"), 1, 0)) %>% 
+  mutate(ppc = if_else(infec_7 == 1 | pulm_supp_7 == 1, 1, 0)) %>% 
+  group_by(week_start) %>%
+  summarise(denominator = n(), 
+            numerator = sum(ppc),
+            prop = sum(ppc) / n(),
+            n=n()) %>% 
+  ggplot(data = ., aes(x = as.Date(week_start, format = "%Y-%m-%d"), y = prop)) +
+  geom_line(colour = "#FF2700") +
+  geom_point(size = 1) +
+  # geom_hline(aes(yintercept = median(prop)), linetype = 2) +
+  geom_text(aes(label = n), size = 3,nudge_x = 0, nudge_y = 0.08) +
+  scale_x_date(date_breaks = "1 week", date_labels = "%b-%d") +
+  scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.25)) +
+  labs(
+    x="Week starting", y = "Proportion"
+  ) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Proportion of pts. compliant with icough bundle
 measures_plots <- c(measures_plots, list(
-        df_srft %>%
-                dplyr::select(inc_spiro, t_brushes, m_washes, oral_diet, mobilised, week_start, area_surgery) %>%
-                filter(area_surgery == "urology and endocrinology") %>% 
-                filter(rowSums(is.na(dplyr::select(., 1:5))) < 4) %>%  # omit recent surgeries
-                mutate_at(
-                        .vars = vars(1:5),
-                        .funs = function(x) {
-                                if_else(x %in% bundle_yes, 1, 0)
-                        }
-                ) %>%
-                mutate(compliant = rowSums(dplyr::select(., 1:5))) %>%
-                mutate(
-                        compliant = if_else(compliant >= 4, "yes", "no")
-                ) %>%
-                group_by(week_start) %>%
-                summarise(prop = sum(compliant == "yes") / n(),
-                          n=n()) %>% 
-                ggplot(data = ., aes(x = as.Date(week_start), y = prop)) +
-                geom_line(colour = "#FF2700", group = 1) +
-                geom_point(size = 1) +
-                # geom_hline(aes(yintercept = median(prop)), linetype = 2) +
-                geom_text(aes(label = n), size = 3,nudge_x = 0, nudge_y = 0.08) +
-                scale_x_date(date_breaks = "1 week", date_labels = "%b-%d") +
-                scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.25)) +
-                labs(
-                        x="Week starting", y = "Proportion"
-                ) +
-                theme_bw() +
-                theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  df_srft %>%
+    dplyr::select(inc_spiro, t_brushes, m_washes, oral_diet, mobilised, week_start, area_surgery) %>%
+    filter(area_surgery == "urology and endocrinology") %>% 
+    filter(rowSums(is.na(dplyr::select(., 1:5))) < 4) %>%  # omit recent surgeries
+    mutate_at(
+      .vars = vars(1:5),
+      .funs = function(x) {
+        if_else(x %in% bundle_yes, 1, 0)
+      }
+    ) %>%
+    mutate(compliant = rowSums(dplyr::select(., 1:5))) %>%
+    mutate(
+      compliant = if_else(compliant >= 4, "yes", "no")
+    ) %>%
+    group_by(week_start) %>%
+    summarise(prop = sum(compliant == "yes") / n(),
+              n=n()) %>% 
+    ggplot(data = ., aes(x = as.Date(week_start), y = prop)) +
+    geom_line(colour = "#FF2700", group = 1) +
+    geom_point(size = 1) +
+    # geom_hline(aes(yintercept = median(prop)), linetype = 2) +
+    geom_text(aes(label = n), size = 3,nudge_x = 0, nudge_y = 0.08) +
+    scale_x_date(date_breaks = "1 week", date_labels = "%b-%d") +
+    scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.25)) +
+    labs(
+      x="Week starting", y = "Proportion"
+    ) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ))
 
 # Prop pts teeth brushed twice
 measures_plots <- c(measures_plots, list(
-        df_srft %>%
-                dplyr::select(t_brushes, week_start, area_surgery) %>%
-                filter(area_surgery == "urology and endocrinology") %>% 
-                na.omit() %>%
-                mutate(t_brushed = if_else(t_brushes == "twice", 1, 0)) %>%
-                group_by(week_start) %>%
-                summarise(freq = sum(t_brushed) / n(),
-                          n = n()) %>%
-                ggplot(data = ., aes(x = as.Date(week_start), y = freq)) +
-                geom_line(colour = "#FF2700", group = 1) +
-                geom_point(size = 1) +
-                scale_x_date(date_breaks = "1 week", date_labels = "%b-%d") +
-                scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.25)) +
-                geom_text(aes(label = n), size = 3,nudge_x = 0, nudge_y = 0.08) +
-                labs(
-                        y = "Proportion",
-                        x = "Week starting"
-                ) +
-                theme_bw() +
-                theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  df_srft %>%
+    dplyr::select(t_brushes, week_start, area_surgery) %>%
+    filter(area_surgery == "urology and endocrinology") %>% 
+    na.omit() %>%
+    mutate(t_brushed = if_else(t_brushes == "twice", 1, 0)) %>%
+    group_by(week_start) %>%
+    summarise(freq = sum(t_brushed) / n(),
+              n = n()) %>%
+    ggplot(data = ., aes(x = as.Date(week_start), y = freq)) +
+    geom_line(colour = "#FF2700", group = 1) +
+    geom_point(size = 1) +
+    scale_x_date(date_breaks = "1 week", date_labels = "%b-%d") +
+    scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.25)) +
+    geom_text(aes(label = n), size = 3,nudge_x = 0, nudge_y = 0.08) +
+    labs(
+      y = "Proportion",
+      x = "Week starting"
+    ) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ))
 
 # Prop pts mobilised
 measures_plots <- c(measures_plots, list(
-        df_srft %>%
-                dplyr::select(mobilised, week_start, area_surgery) %>%
-                filter(area_surgery == "urology and endocrinology") %>% 
-                na.omit() %>%
-                mutate(mobilised = if_else(mobilised == "yes", 1, 0)) %>%
-                group_by(week_start) %>%
-                summarise(freq = sum(mobilised) / n(), n = n()) %>%
-                ggplot(data = ., aes(x = as.Date(week_start), y = freq)) +
-                geom_line(colour = "#FF2700", group = 1) +
-                geom_point(size = 1) +
-                geom_text(aes(label = n), size = 3,nudge_x = 0, nudge_y = 0.08) +
-                scale_x_date(date_breaks = "1 week", date_labels = "%b-%d") +
-                scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.25)) +
-                labs(
-                        x = "Week starting", y = "Proportion"
-                ) +
-                theme_bw() +
-                theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  df_srft %>%
+    dplyr::select(mobilised, week_start, area_surgery) %>%
+    filter(area_surgery == "urology and endocrinology") %>% 
+    na.omit() %>%
+    mutate(mobilised = if_else(mobilised == "yes", 1, 0)) %>%
+    group_by(week_start) %>%
+    summarise(freq = sum(mobilised) / n(), n = n()) %>%
+    ggplot(data = ., aes(x = as.Date(week_start), y = freq)) +
+    geom_line(colour = "#FF2700", group = 1) +
+    geom_point(size = 1) +
+    geom_text(aes(label = n), size = 3,nudge_x = 0, nudge_y = 0.08) +
+    scale_x_date(date_breaks = "1 week", date_labels = "%b-%d") +
+    scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.25)) +
+    labs(
+      x = "Week starting", y = "Proportion"
+    ) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ))
 
 # Prop pts used IS
 measures_plots <- c(measures_plots, list(
-        df_srft %>%
-                dplyr::select(inc_spiro, week_start, area_surgery) %>%
-                filter(area_surgery == "urology and endocrinology") %>% 
-                na.omit() %>%
-                mutate(inc_spiro = if_else(inc_spiro %in% c("once", "twice", ">two"), 1, 0)) %>%
-                group_by(week_start) %>%
-                summarise(freq = sum(inc_spiro) / n(),
-                          n = n()) %>%
-                ggplot(data = ., aes(x = as.Date(week_start), y = freq)) +
-                geom_line(colour = "#FF2700", group = 1) +
-                geom_point(size = 1) +
-                geom_text(aes(label = n), size = 3,nudge_x = 0, nudge_y = 0.08) +
-                scale_x_date(date_breaks = "1 week", date_labels = "%b-%d") +
-                scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.25)) +
-                labs(
-                        y = "Proportion", x = "Week starting"
-                ) +
-                theme_bw() +
-                theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  df_srft %>%
+    dplyr::select(inc_spiro, week_start, area_surgery) %>%
+    filter(area_surgery == "urology and endocrinology") %>% 
+    na.omit() %>%
+    mutate(inc_spiro = if_else(inc_spiro %in% c("once", "twice", ">two"), 1, 0)) %>%
+    group_by(week_start) %>%
+    summarise(freq = sum(inc_spiro) / n(),
+              n = n()) %>%
+    ggplot(data = ., aes(x = as.Date(week_start), y = freq)) +
+    geom_line(colour = "#FF2700", group = 1) +
+    geom_point(size = 1) +
+    geom_text(aes(label = n), size = 3,nudge_x = 0, nudge_y = 0.08) +
+    scale_x_date(date_breaks = "1 week", date_labels = "%b-%d") +
+    scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.25)) +
+    labs(
+      y = "Proportion", x = "Week starting"
+    ) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ))
 
 # Prop pts mouth washed twice
 measures_plots <- c(measures_plots, list(
-        df_srft %>%
-                dplyr::select(m_washes, week_start, area_surgery) %>%
-                filter(area_surgery == "urology and endocrinology") %>% 
-                na.omit() %>%
-                mutate(m_washed = if_else(m_washes == "twice", 1, 0)) %>%
-                group_by(week_start) %>%
-                summarise(freq = sum(m_washed) / n(),
-                          n = n()) %>%
-                ggplot(data = ., aes(x = as.Date(week_start), y = freq)) +
-                geom_line(colour = "#FF2700", group = 1) +
-                geom_point(size = 1) +
-                geom_text(aes(label = n), size = 3,nudge_x = 0, nudge_y = 0.08) +
-                scale_x_date(date_breaks = "1 week", date_labels = "%b-%d") +
-                scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.25)) +
-                labs(
-                        x = "Week starting", y = "Proportion"
-                ) +
-                theme_bw() +
-                theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  df_srft %>%
+    dplyr::select(m_washes, week_start, area_surgery) %>%
+    filter(area_surgery == "urology and endocrinology") %>% 
+    na.omit() %>%
+    mutate(m_washed = if_else(m_washes == "twice", 1, 0)) %>%
+    group_by(week_start) %>%
+    summarise(freq = sum(m_washed) / n(),
+              n = n()) %>%
+    ggplot(data = ., aes(x = as.Date(week_start), y = freq)) +
+    geom_line(colour = "#FF2700", group = 1) +
+    geom_point(size = 1) +
+    geom_text(aes(label = n), size = 3,nudge_x = 0, nudge_y = 0.08) +
+    scale_x_date(date_breaks = "1 week", date_labels = "%b-%d") +
+    scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.25)) +
+    labs(
+      x = "Week starting", y = "Proportion"
+    ) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ))
 
 
 # Prop pts oral diet
 measures_plots <- c(measures_plots, list(
-        df_srft %>%
-                dplyr::select(oral_diet, week_start, area_surgery) %>%
-                filter(area_surgery == "urology and endocrinology") %>% 
-                na.omit() %>%
-                mutate(oral_diet = if_else(oral_diet == "yes", 1, 0)) %>%
-                group_by(week_start) %>%
-                summarise(freq = sum(oral_diet) / n(),
-                          n = n()) %>%
-                ggplot(data = ., aes(x = as.Date(week_start), y = freq)) +
-                geom_line(colour = "#FF2700", group = 1) +
-                geom_point(size = 1) +
-                geom_text(aes(label = n), size = 3,nudge_x = 0, nudge_y = 0.08) +
-                scale_x_date(date_breaks = "1 week", date_labels = "%b-%d") +
-                scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.25)) +
-                labs(
-                        x="Week starting", y = "Proportion"
-                ) +
-                theme_bw() +
-                theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  df_srft %>%
+    dplyr::select(oral_diet, week_start, area_surgery) %>%
+    filter(area_surgery == "urology and endocrinology") %>% 
+    na.omit() %>%
+    mutate(oral_diet = if_else(oral_diet == "yes", 1, 0)) %>%
+    group_by(week_start) %>%
+    summarise(freq = sum(oral_diet) / n(),
+              n = n()) %>%
+    ggplot(data = ., aes(x = as.Date(week_start), y = freq)) +
+    geom_line(colour = "#FF2700", group = 1) +
+    geom_point(size = 1) +
+    geom_text(aes(label = n), size = 3,nudge_x = 0, nudge_y = 0.08) +
+    scale_x_date(date_breaks = "1 week", date_labels = "%b-%d") +
+    scale_y_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.25)) +
+    labs(
+      x="Week starting", y = "Proportion"
+    ) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ))
 
 do.call("grid.arrange", c(measures_plots, ncol = 2, 
@@ -846,33 +846,33 @@ qqPlot(x = df_srft$hospital_stay, y = "weibull")
 
 # data prep for survival
 df_suv <- df_srft %>%
-        dplyr::select(
-                surgery_date, discharge_date,
-                pulm_supp_24, infec_24, renal_24,
-                gastro, cardio_24, neuro,
-                haemato, wound, pain, area_surgery,
-                inc_spiro, t_brushes, m_washes, oral_diet, mobilised
-        ) %>%
-        mutate_at(
-                .vars = vars(13:17),
-                .funs = function(x) {
-                        if_else(x %in% bundle_yes, 1, 0)
-                }
-        ) %>%
-        mutate(compliant = rowSums(dplyr::select(., 13:17))) %>%
-        mutate(
-                compliant = factor(if_else(compliant >= 4, "yes", "no"))
-        ) %>%
-        mutate(
-                discharge = if_else(!is.na(discharge_date), 1, 0),
-                time_event = if_else(is.na(discharge_date) == TRUE, Sys.Date() - surgery_date, discharge_date - surgery_date)
-        ) %>%
-        mutate_at(
-                .vars = vars(3:11),
-                .funs = function(x)
-                        if_else(x == "none of the above" | is.na(x) == TRUE, 0, 1) ## pts d/c before 7 days are considered as no morb
-        ) %>%
-        mutate(poms = factor(if_else(rowSums(dplyr::select(., 3:11)) == 0, "no", "yes")))
+  dplyr::select(
+    surgery_date, discharge_date,
+    pulm_supp_24, infec_24, renal_24,
+    gastro, cardio_24, neuro,
+    haemato, wound, pain, area_surgery,
+    inc_spiro, t_brushes, m_washes, oral_diet, mobilised
+  ) %>%
+  mutate_at(
+    .vars = vars(13:17),
+    .funs = function(x) {
+      if_else(x %in% bundle_yes, 1, 0)
+    }
+  ) %>%
+  mutate(compliant = rowSums(dplyr::select(., 13:17))) %>%
+  mutate(
+    compliant = factor(if_else(compliant >= 4, "yes", "no"))
+  ) %>%
+  mutate(
+    discharge = if_else(!is.na(discharge_date), 1, 0),
+    time_event = if_else(is.na(discharge_date) == TRUE, Sys.Date() - surgery_date, discharge_date - surgery_date)
+  ) %>%
+  mutate_at(
+    .vars = vars(3:11),
+    .funs = function(x)
+      if_else(x == "none of the above" | is.na(x) == TRUE, 0, 1) ## pts d/c before 7 days are considered as no morb
+  ) %>%
+  mutate(poms = factor(if_else(rowSums(dplyr::select(., 3:11)) == 0, "no", "yes")))
 
 los_km <- survfit(Surv(time = time_event, event = discharge) ~ 1, data = df_suv, type = "kaplan-meier")
 
@@ -918,23 +918,23 @@ ggsurvplot_combine(list(poms = los_km_poms, general = los_km),
 suvplot_poms_all
 # (ii)
 df_suv_7 <- df_srft %>%
-        dplyr::select(
-                surgery_date, discharge_date,
-                pulm_supp_24, infec_24, renal_24,
-                gastro, cardio_24, neuro,
-                haemato, wound, pain
-        ) %>%
-        filter_at(vars(3:11), any_vars(!is.na(.))) %>%
-        mutate(
-                discharge = if_else(!is.na(discharge_date), 1, 0),
-                time_event = if_else(is.na(discharge_date) == TRUE, Sys.Date() - surgery_date, discharge_date - surgery_date)
-        ) %>%
-        mutate_at(
-                .vars = vars(3:11),
-                .funs = function(x)
-                        if_else(x == "none of the above", 0, 1)
-        ) %>% 
-        mutate(poms = if_else(rowSums(dplyr::select(., 3:11)) == 0, "no", "yes"))
+  dplyr::select(
+    surgery_date, discharge_date,
+    pulm_supp_24, infec_24, renal_24,
+    gastro, cardio_24, neuro,
+    haemato, wound, pain
+  ) %>%
+  filter_at(vars(3:11), any_vars(!is.na(.))) %>%
+  mutate(
+    discharge = if_else(!is.na(discharge_date), 1, 0),
+    time_event = if_else(is.na(discharge_date) == TRUE, Sys.Date() - surgery_date, discharge_date - surgery_date)
+  ) %>%
+  mutate_at(
+    .vars = vars(3:11),
+    .funs = function(x)
+      if_else(x == "none of the above", 0, 1)
+  ) %>% 
+  mutate(poms = if_else(rowSums(dplyr::select(., 3:11)) == 0, "no", "yes"))
 
 los_km_poms_7 <- survfit(Surv(time = time_event, event = discharge) ~ poms, data = df_suv_7)
 
@@ -952,21 +952,21 @@ suvplot_poms_7 <- ggsurvplot(los_km_poms_7,
 
 ## Probability of staying in hospital over time grouped by compliance with iCough bundle
 df_suv_compl <- df_srft %>%
-        dplyr::select(inc_spiro, t_brushes, m_washes, oral_diet, mobilised, discharge_date, surgery_date) %>%
-        mutate(
-                inc_spiro = if_else(inc_spiro %in% c(">two", "twice", "once"), 1, 0), 
-                t_brushes = if_else(t_brushes == "twice", 1, 0),
-                m_washes = if_else(m_washes == "twice", 1, 0),
-                oral_diet = if_else(oral_diet == "yes", 1, 0),
-                mobilised = if_else(mobilised == "yes", 1, 0)
-        ) %>%
-        mutate(compliant = rowSums(dplyr::select(., 1:5))) %>%
-        mutate(
-                compliant = factor(if_else(compliant >= 4, "yes", "no"))
-        ) %>%
-        mutate(
-                discharge = if_else(!is.na(discharge_date) == TRUE, 1, 0),
-                time_event = if_else(is.na(discharge_date) == TRUE, Sys.Date() - surgery_date, discharge_date - surgery_date))
+  dplyr::select(inc_spiro, t_brushes, m_washes, oral_diet, mobilised, discharge_date, surgery_date) %>%
+  mutate(
+    inc_spiro = if_else(inc_spiro %in% c(">two", "twice", "once"), 1, 0), 
+    t_brushes = if_else(t_brushes == "twice", 1, 0),
+    m_washes = if_else(m_washes == "twice", 1, 0),
+    oral_diet = if_else(oral_diet == "yes", 1, 0),
+    mobilised = if_else(mobilised == "yes", 1, 0)
+  ) %>%
+  mutate(compliant = rowSums(dplyr::select(., 1:5))) %>%
+  mutate(
+    compliant = factor(if_else(compliant >= 4, "yes", "no"))
+  ) %>%
+  mutate(
+    discharge = if_else(!is.na(discharge_date) == TRUE, 1, 0),
+    time_event = if_else(is.na(discharge_date) == TRUE, Sys.Date() - surgery_date, discharge_date - surgery_date))
 
 los_km_cough <- survfit(Surv(time = time_event, event = discharge) ~ compliant, data = df_suv)
 ggsurvplot(los_km_cough,
@@ -981,45 +981,45 @@ ggsurvplot(los_km_cough,
 
 # KM grouped by compliant and poms (pts d/c before 7 days are considered as no morb)
 survfit(Surv(time = time_event, event = discharge) ~ compliant + strata(poms), data = df_suv, type = "kaplan-meier") %>% 
-        ggsurvplot(.,
-                   conf.int = TRUE,
-                   risk.table = FALSE,
-                   surv.median.line = "hv",
-                   linetype = 1,
-                   palette = "lancet",
-                   break.x.by = 3,
-                   ggtheme = theme_fivethirtyeight()
-        )
+  ggsurvplot(.,
+             conf.int = TRUE,
+             risk.table = FALSE,
+             surv.median.line = "hv",
+             linetype = 1,
+             palette = "lancet",
+             break.x.by = 3,
+             ggtheme = theme_fivethirtyeight()
+  )
 # Same as above but considering only patients who were administered POMS
 compl_poms_7 <- df_srft %>%
-        dplyr::select(
-                surgery_date, discharge_date,
-                pulm_supp_24, infec_24, renal_24,
-                gastro, cardio_24, neuro,
-                haemato, wound, pain, area_surgery,
-                inc_spiro, t_brushes, m_washes, oral_diet, mobilised
-        ) %>%
-        filter_at(vars(3:11), any_vars(!is.na(.))) %>%
-        mutate_at(
-                .vars = vars(13:17),
-                .funs = function(x) {
-                        if_else(x %in% bundle_yes, 1, 0)
-                }
-        ) %>%
-        mutate(compliant = rowSums(dplyr::select(., 13:17))) %>%
-        mutate(
-                compliant = factor(if_else(compliant >= 4, "yes", "no"))
-        ) %>%
-        mutate(
-                discharge = if_else(!is.na(discharge_date), 1, 0),
-                time_event = if_else(is.na(discharge_date) == TRUE, Sys.Date() - surgery_date, discharge_date - surgery_date)
-        ) %>%
-        mutate_at(
-                .vars = vars(3:11),
-                .funs = function(x)
-                        if_else(x == "none of the above", 0, 1)
-        ) %>%
-        mutate(poms = factor(if_else(rowSums(dplyr::select(., 3:11)) == 0, "no", "yes"))) 
+  dplyr::select(
+    surgery_date, discharge_date,
+    pulm_supp_24, infec_24, renal_24,
+    gastro, cardio_24, neuro,
+    haemato, wound, pain, area_surgery,
+    inc_spiro, t_brushes, m_washes, oral_diet, mobilised
+  ) %>%
+  filter_at(vars(3:11), any_vars(!is.na(.))) %>%
+  mutate_at(
+    .vars = vars(13:17),
+    .funs = function(x) {
+      if_else(x %in% bundle_yes, 1, 0)
+    }
+  ) %>%
+  mutate(compliant = rowSums(dplyr::select(., 13:17))) %>%
+  mutate(
+    compliant = factor(if_else(compliant >= 4, "yes", "no"))
+  ) %>%
+  mutate(
+    discharge = if_else(!is.na(discharge_date), 1, 0),
+    time_event = if_else(is.na(discharge_date) == TRUE, Sys.Date() - surgery_date, discharge_date - surgery_date)
+  ) %>%
+  mutate_at(
+    .vars = vars(3:11),
+    .funs = function(x)
+      if_else(x == "none of the above", 0, 1)
+  ) %>%
+  mutate(poms = factor(if_else(rowSums(dplyr::select(., 3:11)) == 0, "no", "yes"))) 
 
 compl_poms_7_km <- survfit(Surv(time = time_event, event = discharge) ~ compliant + strata(poms), data = compl_poms_7, type = "kaplan-meier")
 
@@ -1055,8 +1055,8 @@ ggsurvplot_df(fit = srv_wb, surv.geom = geom_line)
 # adding poms and icough bundle compliance
 srv_wb_covs <- survreg(Surv(time = time_event, event = discharge) ~ poms + compliant, data = df_suv, dist = "weibull")
 newdat <- expand.grid(
-        poms = levels(df_suv$poms),
-        compliant = levels(df_suv$compliant)
+  poms = levels(df_suv$poms),
+  compliant = levels(df_suv$compliant)
 )
 # compute survival function
 t_newdat <- predict(srv_wb_covs, type = "quantile", p = 1- surv, newdata = newdat, se.fit = TRUE)
@@ -1086,8 +1086,8 @@ ggsurvplot_df(dists_long, surv.geom = geom_line, linetype = "compliant", color =
 # cox model
 cxmod <- coxph(Surv(time_event, discharge) ~ compliant + poms, data = df_suv)
 cox_levels <- expand.grid(
-        compliant = levels(df_suv$compliant),
-        poms = levels(df_suv$poms)
+  compliant = levels(df_suv$compliant),
+  poms = levels(df_suv$poms)
 )
 rownames(cox_levels) <- letters[1:4]
 
@@ -1103,103 +1103,103 @@ ggsurvplot(surv_cxmod, color = "poms", linetype = "compliant", legend.title = NU
 # code to work out indicators and other measures of the Data Summary Table per Site
 # Attendance at surgery school
 df_srft %>%
-        dplyr::select(chest_physio, surgery_date, area_surgery) %>%
-        filter(area_surgery == "colorectal") %>% 
-        mutate(chest_physio = if_else(chest_physio %in% c("nurse", "surgery school", "doctor"), 1, 0)) %>%
-        group_by(month = lubridate::month(surgery_date, label = TRUE)) %>%
-        summarise(school_sum = sum(chest_physio), 
-                  n = n(),
-                  school_prop = sum(chest_physio) / n())
+  dplyr::select(chest_physio, surgery_date, area_surgery) %>%
+  filter(area_surgery == "colorectal") %>% 
+  mutate(chest_physio = if_else(chest_physio %in% c("nurse", "surgery school", "doctor"), 1, 0)) %>%
+  group_by(month = lubridate::month(surgery_date, label = TRUE)) %>%
+  summarise(school_sum = sum(chest_physio), 
+            n = n(),
+            school_prop = sum(chest_physio) / n())
 
 # Prop of pts treated for anaemia management
 df_srft %>%
-        dplyr::select(anaemia_treat, hb, surgery_date, area_surgery) %>%
-        filter(area_surgery == "colorectal") %>% 
-        mutate(
-                anaemia_treat = if_else(!anaemia_treat %in% c("none", "not applicable"), 1, 0),
-                hb = if_else(hb < 13, 1, 0)) %>% 
-        group_by(month = lubridate::month(surgery_date, label = TRUE)) %>%
-        summarise(denominator = sum(hb) + sum(anaemia_treat), 
-                  numerator = sum(anaemia_treat),
-                  anae_prop = sum(anaemia_treat) / (sum(hb) + sum(anaemia_treat)))
+  dplyr::select(anaemia_treat, hb, surgery_date, area_surgery) %>%
+  filter(area_surgery == "colorectal") %>% 
+  mutate(
+    anaemia_treat = if_else(!anaemia_treat %in% c("none", "not applicable"), 1, 0),
+    hb = if_else(hb < 13, 1, 0)) %>% 
+  group_by(month = lubridate::month(surgery_date, label = TRUE)) %>%
+  summarise(denominator = sum(hb) + sum(anaemia_treat), 
+            numerator = sum(anaemia_treat),
+            anae_prop = sum(anaemia_treat) / (sum(hb) + sum(anaemia_treat)))
 
 # iCOUGH bundle compliance  (Patients that were eligible and patients that were compliant)
 df_srft %>%
-        dplyr::select(inc_spiro, t_brushes, m_washes, oral_diet, mobilised, surgery_date, area_surgery) %>%
-        filter(rowSums(is.na(dplyr::select(., 1:5))) < 4 & area_surgery == "colorectal") %>%  # omit recent surgeriies
-        mutate_at(
-                .vars = vars(1:5),
-                .funs = function(x) {
-                        if_else(x %in% bundle_yes, 1, 0)
-                }
-        ) %>%
-        mutate(compliant = rowSums(dplyr::select(., 1:5))) %>%
-        mutate(
-                compliant = if_else(compliant >= 4, "yes", "no")
-        ) %>%
-        group_by(month = lubridate::month(surgery_date, label = TRUE)) %>%
-        summarise(numerator = sum(compliant == "yes"),
-                  denominator = n(),
-                  prop = sum(compliant == "yes") / n())
+  dplyr::select(inc_spiro, t_brushes, m_washes, oral_diet, mobilised, surgery_date, area_surgery) %>%
+  filter(rowSums(is.na(dplyr::select(., 1:5))) < 4 & area_surgery == "colorectal") %>%  # omit recent surgeriies
+  mutate_at(
+    .vars = vars(1:5),
+    .funs = function(x) {
+      if_else(x %in% bundle_yes, 1, 0)
+    }
+  ) %>%
+  mutate(compliant = rowSums(dplyr::select(., 1:5))) %>%
+  mutate(
+    compliant = if_else(compliant >= 4, "yes", "no")
+  ) %>%
+  group_by(month = lubridate::month(surgery_date, label = TRUE)) %>%
+  summarise(numerator = sum(compliant == "yes"),
+            denominator = n(),
+            prop = sum(compliant == "yes") / n())
 
 # Pt satisfaction with ERAS
 df_srft %>%
-        dplyr::select(school_satisfaction, surgery_date, area_surgery, eras) %>%
-        mutate(school_satisfaction = as.numeric(school_satisfaction)) %>% 
-        filter(area_surgery == "colorectal" & !is.na(school_satisfaction)) %>%
-        group_by(month = lubridate::month(surgery_date, label = TRUE)) %>%
-        summarise(denominator = 10 * n(), 
-                  numerator = sum(school_satisfaction),
-                  prop = (sum(school_satisfaction) / n()))
+  dplyr::select(school_satisfaction, surgery_date, area_surgery, eras) %>%
+  mutate(school_satisfaction = as.numeric(school_satisfaction)) %>% 
+  filter(area_surgery == "colorectal" & !is.na(school_satisfaction)) %>%
+  group_by(month = lubridate::month(surgery_date, label = TRUE)) %>%
+  summarise(denominator = 10 * n(), 
+            numerator = sum(school_satisfaction),
+            prop = (sum(school_satisfaction) / n()))
 
 # Development of PPC by 7 days after surgery
 df_srft %>% dplyr::select(area_surgery, surgery_date, infec_7, pulm_supp_7) %>% 
-        filter(area_surgery == "colorectal" & !is.na(infec_7)) %>% 
-        mutate(infec_7 = if_else(infec_7 == "chest", 1, 0),
-               pulm_supp_7 = if_else(pulm_supp_7 %in% c("mild", "moderate", "severe"), 1, 0)) %>% 
-        mutate(ppc = if_else(infec_7 == 1 | pulm_supp_7 == 1, 1, 0)) %>% 
-        group_by(month = lubridate::month(surgery_date, label = TRUE)) %>%
-        summarise(denominator = n(), 
-                  numerator = sum(ppc),
-                  prop = sum(ppc) / n())
+  filter(area_surgery == "colorectal" & !is.na(infec_7)) %>% 
+  mutate(infec_7 = if_else(infec_7 == "chest", 1, 0),
+         pulm_supp_7 = if_else(pulm_supp_7 %in% c("mild", "moderate", "severe"), 1, 0)) %>% 
+  mutate(ppc = if_else(infec_7 == 1 | pulm_supp_7 == 1, 1, 0)) %>% 
+  group_by(month = lubridate::month(surgery_date, label = TRUE)) %>%
+  summarise(denominator = n(), 
+            numerator = sum(ppc),
+            prop = sum(ppc) / n())
 
 # Hospital length of stay following surgery (Median per month by discharge month)
 df_srft %>% dplyr::select(area_surgery, discharge_date, hospital_stay) %>% 
-        filter(area_surgery == "colorectal" & !is.na(discharge_date)) %>% 
-        group_by(month = lubridate::month(discharge_date, label = TRUE)) %>%
-        summarise(n_pts = n(),
-                  median_los = median(hospital_stay, na.rm = TRUE))
+  filter(area_surgery == "colorectal" & !is.na(discharge_date)) %>% 
+  group_by(month = lubridate::month(discharge_date, label = TRUE)) %>%
+  summarise(n_pts = n(),
+            median_los = median(hospital_stay, na.rm = TRUE))
 
 # Readmission rates in 30 days (Discharges per month that were readmitted less than 31 days later)
 df_srft %>% dplyr::select(area_surgery, discharge_date, readmit_30) %>% 
-        filter(area_surgery == "colorectal" & !is.na(readmit_30)) %>% 
-        group_by(month = lubridate::month(discharge_date, label = TRUE)) %>%
-        summarise(denominator = n(),
-                  numerator = sum(readmit_30 == "yes"),
-                  prop = sum(readmit_30 == "yes") / n())
+  filter(area_surgery == "colorectal" & !is.na(readmit_30)) %>% 
+  group_by(month = lubridate::month(discharge_date, label = TRUE)) %>%
+  summarise(denominator = n(),
+            numerator = sum(readmit_30 == "yes"),
+            prop = sum(readmit_30 == "yes") / n())
 
 # Post-operative morbidity survey (POMS) recorded on day 7
 df_srft %>%
-        dplyr::select(
-                surgery_date, area_surgery,
-                pulm_supp_24, infec_24, renal_24,
-                gastro, cardio_24, neuro,
-                haemato, wound, pain
-        ) %>%
-        filter_at(vars(3:11), any_vars(!is.na(.))) %>%
-        filter(area_surgery == "colorectal") %>%
-        mutate_at(
-                .vars = vars(3:11),
-                .funs = function(x)
-                        if_else(x == "none of the above", 0, 1)
-        ) %>% 
-        mutate(poms = if_else(rowSums(dplyr::select(., 3:11)) == 0, 0, 1)) %>% 
-        group_by(lubridate::month(surgery_date, label = TRUE)) %>% 
-        summarise(denominator = n(),
-                  numerator = sum(poms),
-                  prop = sum(poms) / n())
+  dplyr::select(
+    surgery_date, area_surgery,
+    pulm_supp_24, infec_24, renal_24,
+    gastro, cardio_24, neuro,
+    haemato, wound, pain
+  ) %>%
+  filter_at(vars(3:11), any_vars(!is.na(.))) %>%
+  filter(area_surgery == "colorectal") %>%
+  mutate_at(
+    .vars = vars(3:11),
+    .funs = function(x)
+      if_else(x == "none of the above", 0, 1)
+  ) %>% 
+  mutate(poms = if_else(rowSums(dplyr::select(., 3:11)) == 0, 0, 1)) %>% 
+  group_by(lubridate::month(surgery_date, label = TRUE)) %>% 
+  summarise(denominator = n(),
+            numerator = sum(poms),
+            prop = sum(poms) / n())
 
 # Surgical complications recorded on patient discharge using the Clavien-Dindo grading system
 df_srft %>% dplyr::select(area_surgery, complication, discharge_date) %>% 
-        filter(area_surgery == "colorectal" & !is.na(discharge_date)) %>% 
-        group_by(lubridate::month(discharge_date, label = TRUE))
+  filter(area_surgery == "colorectal" & !is.na(discharge_date)) %>% 
+  group_by(lubridate::month(discharge_date, label = TRUE))

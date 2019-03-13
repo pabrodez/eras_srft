@@ -1,6 +1,6 @@
-####################################################################################
-## Purpose: Clean and format eras_srft.csv for use in haelo Dashboard
-###################################################################################
+##########################################################################################
+## Purpose: Clean and format eras_srft.csv for use in haelo Dashboards and flex_haelo.Rmd
+##########################################################################################
 
 # Load libraries ----------------------------------------------------------
 library(tidyverse)
@@ -12,48 +12,41 @@ library(survMisc)
 library(stringr)
 library(ggthemes)
 library(reshape2)
+
 # 1 Read ---------------------------------------------------------------
-data_path <- list.files("./data", pattern = "\\.csv", full.names = TRUE, ignore.case = TRUE)[[1]]  ## save "collated" sheet as a single .csv file and move manually to folder "data"
-df_srft <- read.csv(data_path, strip.white = TRUE, stringsAsFactors = FALSE, nrow = 310)           ## specify number of rows to read as excel tends to generate blank rows, slowing this step      
+na_list <- c(
+  "0", "", "NA", "na", "n/a", "<NA>", "not known/not recorded", "n/r",
+  "not measured", "Not Measured", "none measured", "None Measured", "not done", "Not Done",
+  "n/d", "Not Recorded", "not recorded", "u/k", "unknown", "#ref!"
+)
+
+data_path <- list.files("./data", pattern = "\\.csv", full.names = TRUE, ignore.case = TRUE)[[1]]               
+# save "collated" sheet as a single .csv file and move manually to folder "data"
+
+df_srft <- read.csv(data_path, strip.white = TRUE, stringsAsFactors = FALSE, nrow = 350, na.strings = na_list)   
+# specify number of rows to read as excel tends to generate blank rows      
+df_srft <- as_tibble(df_srft)
 df_srft[, sapply(df_srft, is.character)] <- sapply(df_srft[, sapply(df_srft, is.character)],
                                                    iconv, from = "WINDOWS-1252", to = "UTF-8")
 
 # 2 Data cleaning -----------------------------------------------------------
-df_srft[] <- lapply(df_srft, function(x)
-  if (is.character(x) == TRUE) {
-    tolower(x)
-  } else {
-    x
-  })
-
-df_srft[] <- lapply(df_srft, function(x)
-  if (is.character(x) == TRUE) {
-    trimws(x)
-  } else {
-    x
-  })
-
-# Replace not recorded and missing values with NAs (to be discussed)
-na_list <- c(
-  0, "0", "", "NA", "na", "n/a", "<NA>", "not known/not recorded", "n/r",
-  "not measured", "Not Measured", "none measured", "None Measured", "not done", "Not Done",
-  "n/d", "Not Recorded", "not recorded", "u/k", "unknown", "#ref!"
-)
-df_srft[] <- lapply(df_srft, function(x) ifelse(x %in% na_list, NA, x))
+df_srft <- purrr::modify_if(df_srft, is.character, function(.) tolower(trimws(.)))
 
 # Remove rows with empty values in all columns
-remove_blankr <- function(x) {
+rm_blankr <- function(x) {
   x[rowSums(is.na(x)) != ncol(x), ]
 }
 
-df_srft <- remove_blankr(df_srft)
+df_srft <- rm_blankr(df_srft)
 
 # Remove columns with empty values in all rows
-remove_blankc <- function(x) {
+rm_blankc <- function(x) {
   x[, colSums(is.na(x)) != nrow(x)]
 }
 
-df_srft <- remove_blankc(df_srft)
+df_srft <- rm_blankc(df_srft)
+
+df_srft <- map_dfc(df_srft, ~ ifelse(is.character(.) & . %in% na_list, NA, .))
 
 # Set columns classes
 df_srft$admission_date <- as.Date(df_srft$admission_date, format = "%d/%m/%Y")
@@ -66,23 +59,17 @@ df_srft$date_15 <- as.Date(df_srft$date_15, format = "%d/%m/%Y")
 
 df_srft$date_school <- as.Date(df_srft$date_school, origin = "1899-12-30")
 
-df_srft[] <- lapply(df_srft, function(x) {
-  if (class(x) == "Date") {
-    dplyr::if_else(lubridate::year(x) < 2018, as.Date(NA), x)
-  }
-  else {
-    (x)
-  }
-})
+df_srft <- purrr::modify_if(df_srft, is.Date, ~ if_else(lubridate::year(.) < 2018, as.Date(NA), .))
 
-df_srft$hospital_stay <- as.numeric(df_srft$hospital_stay)
-df_srft$hospital_stay <- ifelse(df_srft$hospital_stay < 0, NA, df_srft$hospital_stay)
+df_srft$hospital_stay <- as.integer(df_srft$hospital_stay)
+df_srft$hospital_stay <- if_else(df_srft$hospital_stay < 0, NA_integer_, df_srft$hospital_stay)
 
 df_srft$hb <- as.numeric(df_srft$hb)
 df_srft$creatinine <- as.numeric(df_srft$creatinine)
 df_srft$albumin <- as.numeric(df_srft$albumin)
 df_srft$creatinine_base <- as.numeric(df_srft$creatinine_base)
 df_srft$creatinine_high <- as.numeric(df_srft$creatinine_high)
+df_srft$tidal_vol <- as.numeric(df_srft$tidal_vol)
 df_srft$tidal_vol <- as.numeric(df_srft$tidal_vol)
 
 df_srft$discharge_loc <- sub("critical care (level 2)", "ccu (level 2)", df_srft$discharge_loc, fixed = TRUE)
@@ -127,8 +114,6 @@ df_srft[df_srft$surgery == "gastrectomy (total or partial) with excision of surr
 surrounding tissue"
 df_srft$surgery <- sub("\\\n", " ", df_srft$surgery)
 df_srft[df_srft$surgery == "right hemicolectomy (with anastamosis)",]$surgery <- "right hemicolectomy (with anastomosis /colostomy)"
-
-df_srft$tidal_vol <- as.numeric(df_srft$tidal_vol)
 
 df_srft$gastro <- ifelse(!is.na(df_srft$gastro) & df_srft$gastro == "experienced nausea, vomiting or distension, unable to tolerate enteral diet", "unable to tolerate enteral diet, experienced nausea, vomiting or distension", df_srft$gastro)
 
@@ -180,14 +165,14 @@ count_surgery <- function(data, time_group) {
 # 1.4.2 Number of readmissions within 30 days by month of discharge
 count_readm <- function(data, time_group = discharge_my) {
   data %>%
-  select(discharge_my, area_surgery, readmit_30) %>%
-  filter(!is.na(!! time_group)) %>% 
-  group_by(!! time_group) %>%
-  summarise(
-    n_patients = n(), ## number of pts discharged that month
-    readmit_na = sum(is.na(readmit_30)), ## number of patients for whom 30 days after discharge haven't passed
-    y = sum(readmit_30 == "yes", na.rm = TRUE)
-  )
+    select(discharge_my, area_surgery, readmit_30) %>%
+    filter(!is.na(!! time_group)) %>% 
+    group_by(!! time_group) %>%
+    summarise(
+      n_patients = n(), ## number of pts discharged that month
+      readmit_na = sum(is.na(readmit_30)), ## number of patients for whom 30 days after discharge haven't passed
+      y = sum(readmit_30 == "yes", na.rm = TRUE)
+    )
 }
 
 # 1.4.3 Number of patients with Postoperative Pulmonary Complication by week of surgery
@@ -312,4 +297,3 @@ print_measure <- function(data, measure_fun, area = "all", time = week_start) {
     measure_fun(data = df, time_group = group)
   }
 }
-
