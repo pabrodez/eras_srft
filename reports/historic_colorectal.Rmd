@@ -2,14 +2,15 @@
 title: "Overview of colorectal baseline data"
 author: "Pablo M. Rodriguez"
 date: "`r format(Sys.Date(), '%d %m %Y')`"
-output:
-  tufte::tufte_html: default
+output: 
+  pdf_document: 
+    highlight: tango
+    fig_caption: yes
+fontsize: 12pt
 ---
 
 ```{r chunk options, include = FALSE}
-library(tint)
 knitr::opts_chunk$set(tidy = FALSE, echo = FALSE, cache = FALSE, warning = FALSE, message = FALSE)
-options(htmltools.dir.version = FALSE)
 ```
 
 ```{r libraries, include = FALSE}
@@ -191,17 +192,7 @@ colorectal_merged <- mutate(colorectal_merged,
   week_adm = as.Date(cut.Date(admission_date, "week")),
   month_adm = format.Date(admission_date, "%Y-%m"),
   month_dis = format.Date(discharge_date, "%Y-%m")
-  )
-```
-
-```{r set theme, include=FALSE}
-theme_session <- theme_bw() + theme(
-  plot.background = element_rect(fill = "#fffff8"), 
-  legend.background = element_rect(fill = "#fffff8"),
-  panel.background = element_rect(fill = "#fffff8"),
-  text = element_text(size = 20)
 )
-theme_set(theme_session)
 ```
 
 # Colorectal baseline data
@@ -265,7 +256,6 @@ select(colorectal_merged, surg_name, discharge_date) %>%
   top_n(5, n) %>% 
   kable(row.names = FALSE, caption = "Five most repeated surgeries per year") %>% 
   kable_styling(latex_options = c("striped", "hold_position"))
-
 ```
 
 

@@ -23,7 +23,6 @@ library(survival)
 library(survminer)
 library(reshape2)
 library(qualityTools)
-
 Sys.setlocale("LC_ALL", "uk")
 na_list <- c(
   0, "0", "", "NA", "na", "n/a", "<NA>", "not known/not recorded",
@@ -46,8 +45,6 @@ vars_7 <- c("in_hospital", "location_7", "infec_24", "infec_7", "gastro", "pulm_
             "mobility", "why_inpatient_7", "comment_7", "date_15", "inpatient_15", "comment_15", "discharge_date", "discharge_dest", "complication")
 vars_adm <- c("age", "gender", "gm_eras_ele", "eras", "pqip_consent", "discharge_loc", "surgery_duration",
               "admission_date", "surgery_date", "discharge_date", "hospital_stay", "readmit_30", "days_readmit", "reason_readmit")
-
-
 plotest <- function(dataFrame, na_values) {
         tempDf <- as.data.frame(lapply(dataFrame, function(x) ifelse(x %in% na_values, 0, 1)))
         tempDf <- tempDf[, order(colSums(tempDf))]
@@ -62,7 +59,6 @@ plotest <- function(dataFrame, na_values) {
 not_rec_list <- c("not known/not recorded", "n/r",
                   "not measured", "Not Measured", "none measured", "None Measured", "not done", "Not Done",
                   "n/d", "Not Recorded", "not recorded", "u/k", "unknown")
-
 na_pure <- c(NA, 0, "0", "", "NA", "na", "n/a", "<NA>")
 df_srft[] <- lapply(df_srft, function(x) ifelse(x %in% na_list, NA, x))
 # Remove rows with empty values in all columns
@@ -192,8 +188,6 @@ df_srft %>%
 ## Readmission within 30 days (grouped by month of discharge)
 ```{r fig.fullwidth=TRUE, fig.width=10, fig.height=4}
 df_srft$monthyr_disc <- format(as.Date(df_srft$discharge_date), "%Y-%m")
-
-
 df_srft %>%
         dplyr::select(surgery_date, readmit_30, area_surgery, monthyr_disc) %>%
         na.omit() %>%
@@ -381,7 +375,6 @@ df_srft %>%
 df_srft$week_start <- cut.Date(df_srft$surgery_date, breaks = "week")
 table_weeks <- transform(table(df_srft$week_start))
 table_weeks$Var1 <- as.Date(table_weeks$Var1, format = "%Y-%m-%d")
-
 ggplot(data = table_weeks, aes(x = Var1, y = Freq)) + 
   geom_point(size = 0.5) +
   geom_line(aes(group = 1), colour = "#FF2700") +
@@ -409,7 +402,6 @@ ggplot(data = table_weeks, aes(x = Var1, y = Freq)) +
 ## Compliance with iCough by area. 
 ```{r fig.fullwidth=TRUE, fig.width=10, fig.height=9, fig.cap="Compliance is defined as completing at least 4 out of 5: diet, mouthwash, teeth brushing, diet, mobility, incentive spirometer"}
 bundle_yes <- c(">two", "once", "twice", "yes")
-
 df_srft %>%
   dplyr::select(inc_spiro, t_brushes, m_washes, oral_diet, mobilised) %>%
   sapply(., function(x) {
@@ -492,7 +484,6 @@ df_srft %>%
 ## LOS distribution per area
 ```{r fig.fullwidth=TRUE, fig.width=10, fig.height=13}
 los_back <- subset(df_srft, select = -area_surgery)
-
 ggplot(data = df_srft, aes(x = hospital_stay, fill = area_surgery)) +
   geom_histogram(colour = "black", binwidth = 1) +
   geom_histogram(data = los_back, fill = "grey", alpha = .5, binwidth = 1) +
@@ -556,7 +547,6 @@ df_srft %>% dplyr::select(inc_spiro, m_washes, t_brushes, oral_diet, mobilised, 
         text = element_text(size = 25),
         legend.text = element_text(size = 15),
         legend.title = element_text(size = 15))
-
 ```
 
 \newpage
@@ -633,9 +623,7 @@ df_suv <- df_srft %>%
       if_else(x == "none of the above" | is.na(x) == TRUE, 0, 1) ## pts d/c before 7 days are considered as no morb
   ) %>%
   mutate(poms = factor(if_else(rowSums(dplyr::select(., 3:11)) == 0, "no", "yes")))
-
 los_km <- survfit(Surv(time = time_event, event = discharge) ~ 1, data = df_suv)
-
 ggsurvplot(los_km,
            conf.int = TRUE,
            risk.table = F,
@@ -693,7 +681,6 @@ ggsurvplot(los_km_poms,
                                break.x.by = 3,
                                ggtheme = theme_fivethirtyeight()
 )
-
 ```
 
 ## Combined POMS and general curve
@@ -707,7 +694,6 @@ ggsurvplot_combine(list(poms = los_km_poms, general = los_km),
                    break.x.by = 3,
                    ggtheme = theme_fivethirtyeight()
 )
-
 ```
 \newpage
 
@@ -731,9 +717,7 @@ df_suv_7 <- df_srft %>%
       if_else(x == "none of the above", 0, 1)
   ) %>% 
   mutate(poms = if_else(rowSums(dplyr::select(., 3:11)) == 0, "no", "yes"))
-
 los_km_poms_7 <- survfit(Surv(time = time_event, event = discharge) ~ poms, data = df_suv_7)
-
 ```
 ```{r fig.fullwidth=TRUE, fig.width=10, fig.height=4}
 ggsurvplot(los_km_poms_7,
@@ -745,7 +729,6 @@ ggsurvplot(los_km_poms_7,
                              break.x.by = 3,
                              ggtheme = theme_fivethirtyeight()
 )
-
 ```
 
 ## Grouped by compliance with iCough bundle
@@ -766,7 +749,6 @@ df_suv_compl <- df_srft %>%
   mutate(
     discharge = dplyr::if_else(!is.na(discharge_date) == TRUE, 1, 0),
     time_event = dplyr::if_else(is.na(discharge_date) == TRUE, Sys.Date() - surgery_date, discharge_date - surgery_date))
-
 los_km_cough <- survfit(Surv(time = time_event, event = discharge) ~ compliant, data = df_suv) 
 ggsurvplot(los_km_cough, 
 conf.int = TRUE, 
@@ -776,7 +758,6 @@ conf.int = TRUE,
   palette = "lancet", 
   break.x.by = 3, 
   ggtheme = theme_fivethirtyeight()) 
-
 ``` 
 <!-- \newpage -->
 <!-- ## Grouped by compliant using poms positive as strata (pts d/c before 7 days are considered as no morb) -->

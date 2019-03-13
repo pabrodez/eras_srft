@@ -165,6 +165,7 @@ df_oeso <- read.csv("./data/ppt_oesophagectomies.csv",
 `r tint::margin_note("Format date column and substitue values accordingly")`
 ```{r date, echo=TRUE}
 df_oeso$surgery_date <- as.Date(df_oeso$surgery_date, "%d/%m/%Y")
+
 df_oeso <- df_oeso %>%
   mutate_at(
     vars(pneumonia:abx),
@@ -214,9 +215,11 @@ plotNa <- function(dataFrame) {
   tempData <- expand.grid(list(x = 1:nrow(tempDf), y = colnames(tempDf)))
   tempData$v <- as.vector(as.matrix(tempDf))
   tempData <- data.frame(x = unlist(tempData$x), y = unlist(tempData$y), v = unlist(tempData$v))
+
   ggplot(tempData) + geom_tile(aes(x = x, y = y, fill = factor(v))) +
     scale_fill_manual(values = c("white", "black"), name = "Missing value\n1=No, 0=Yes") + labs(x = "Rows of data set", y = "")
 }
+
 plotNa(df_oeso[, 1:5])
   
 ```
@@ -375,6 +378,7 @@ merged_ppc <- oeso_merged %>%
     ppc_n = sum(ppc == "yes", na.rm = TRUE),
     ppc_rate = ppc_n / pts
   )
+
 merged_ppc %>%
   {
     ggplot(., aes(x = year_month, y = ppc_rate)) +
@@ -674,3 +678,4 @@ eras_compl %>%
                           guide = guide_legend(override.aes=aes(fill=NA)))
   }
 ```
+
