@@ -83,7 +83,7 @@ print_measure(df_haelo, measure_fun = count_tbrush, time=week_start) %>%
 
 Row
 -------------------------------------
-### Number of patients mobilised
+### Patients mobilised
 ```{r}
 print_measure(df_haelo, measure_fun = count_mob, time=week_start) %>% 
   plot_measure(data = ., x = week_start, y = y)
@@ -159,7 +159,7 @@ print_measure(df_haelo, measure_fun = count_tbrush, time=week_start, area = "col
 
 Row
 -------------------------------------
-### Number of patients mobilised
+### Patients mobilised
 ```{r}
 print_measure(df_haelo, measure_fun = count_mob, time=week_start, area = "colorectal") %>% 
   plot_measure(data = ., x = week_start, y = y)
@@ -235,7 +235,7 @@ print_measure(df_haelo, measure_fun = count_tbrush, time=week_start, area = "low
 
 Row
 -------------------------------------
-### Number of patients mobilised
+### Patients mobilised
 ```{r}
 print_measure(df_haelo, measure_fun = count_mob, time=week_start, area = "lower gi") %>% 
   plot_measure(data = ., x = week_start, y = y)
@@ -312,7 +312,7 @@ print_measure(df_haelo, measure_fun = count_tbrush, time=week_start, area = "upp
 
 Row
 -------------------------------------
-### Number of patients mobilised
+### Patients mobilised
 ```{r}
 print_measure(df_haelo, measure_fun = count_mob, time=week_start, area = "upper gi") %>% 
   plot_measure(data = ., x = week_start, y = y)
@@ -388,7 +388,7 @@ print_measure(df_haelo, measure_fun = count_tbrush, time=week_start, area = "uro
 
 Row
 -------------------------------------
-### Number of patients mobilised
+### Patients mobilised
 ```{r}
 print_measure(df_haelo, measure_fun = count_mob, time=week_start, area = "urology and endocrinology") %>% 
   plot_measure(data = ., x = week_start, y = y)
