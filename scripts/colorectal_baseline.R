@@ -10,6 +10,7 @@ library(survminer)
 library(survMisc)
 library(stringr)
 library(ggthemes)
+library(plotly)
 
 # Source haelo_dashboard.R ------------------------------------------------
 source("./scripts/haelo_dashboard.R", echo = FALSE)
@@ -37,7 +38,8 @@ double_surg <- select(df_colorectal, patient_number, admission_date) %>% ## Inde
   which(duplicated(.))
 }
 
-df_colorectal$id <- with(df_colorectal, match(patient_number, unique(patient_number)))  ## add patient identifier
+df_colorectal$patient_number <- with(df_colorectal, match(patient_number, unique(patient_number)))  ## add patient identifier
+df_colorectal <- df_colorectal[, -1]
 
 # 3  Merge df_haelo and df_colorectal --------------------------------------------------------------------
 colorectal_merged <- df_haelo %>%
@@ -57,21 +59,29 @@ colorectal_merged <- df_haelo %>%
   } %>%
   as_tibble()
 
-colorectal_merged <- mutate(colorectal_merged,
-  week_adm = as.Date(cut.Date(admission_date, "week")),
-  month_adm = cut.Date(admission_date, "month"),
-  month_dis = format.Date(discharge_date, "%Y-%m")
+colorectal_merged <- colorectal_merged %>% mutate(
+  week_adm = as.Date(cut.Date(.$admission_date, "week")),
+  month_adm = factor(format.Date(.$admission_date, "%Y-%m"), 
+                     levels = format.Date(levels(cut.Date(.$admission_date, "month")), "%Y-%m")),
+  month_dis = format.Date(.$discharge_date, "%Y-%m")
 )
 
 # 4 Plot ----------------------------------------------------------------
 # Merged: Number of patients by month
 colorectal_merged %>% group_by(month_adm) %>% 
-  summarise(n = n(), baseline = if_else(any(baseline == "yes"), "yes", "no")) %>% 
+  summarise(n = n(), baseline = if_else(any(baseline == "yes"), "yes", "no")) %>%
   {
-    ggplot(., aes(x = factor(.$month_adm), y = .$n, group = 1, colour = baseline)) +
+    ggplot(., aes(x = month_adm, y = n, group = baseline, colour = baseline)) +
       geom_line() +
       scale_y_continuous(breaks = seq(min(.$n), max(.$n), 3)) +
       scale_x_discrete(breaks = .$month_adm[seq(1, length(.$month_adm), 4)], drop = FALSE) +
+      geom_segment(aes(x = "2018-03", xend = "2018-03", y = 18, yend = 15),
+                   arrow = arrow(length = unit(0.02, "npc"))
+      ) +
+      geom_segment(aes(x = "2018-07", xend = "2018-07", y = 18, yend = 15),
+                   arrow = arrow(length = unit(0.02, "npc"))
+      ) +
+      annotate("text", x = "2018-05", y = 19, label = "Gap") +
       theme_fivethirtyeight() +
       theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
   }
