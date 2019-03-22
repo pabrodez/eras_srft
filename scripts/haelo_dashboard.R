@@ -20,33 +20,28 @@ na_list <- c(
   "n/d", "Not Recorded", "not recorded", "u/k", "unknown", "#ref!"
 )
 
-data_path <- list.files("./data", pattern = "\\.csv", full.names = TRUE, ignore.case = TRUE)[[1]]               
+data_path <- dir("./data", "eras_srft.csv", full.names = TRUE, ignore.case = TRUE)              
 # save "collated" sheet as a single .csv file and move manually to folder "data"
 
-df_srft <- read.csv(data_path, strip.white = TRUE, stringsAsFactors = FALSE, nrow = 350, na.strings = na_list)   
-# specify number of rows to read as excel tends to generate blank rows      
-df_srft <- as_tibble(df_srft)
+df_srft <- read_csv(data_path, n_max = 380, na = na_list)   
+# specify number of rows to read as excel tends to generate blank rows 
 df_srft[, sapply(df_srft, is.character)] <- sapply(df_srft[, sapply(df_srft, is.character)],
                                                    iconv, from = "WINDOWS-1252", to = "UTF-8")
 
 # 2 Data cleaning -----------------------------------------------------------
-df_srft <- purrr::modify_if(df_srft, is.character, function(.) tolower(trimws(.)))
+df_srft <- purrr::modify_if(df_srft, is.character, tolower)
+df_srft <- map_dfc(df_srft, ~ ifelse(is.character(.) & . %in% na_list, NA, .))
 
-# Remove rows with empty values in all columns
+# Remove empty rows and columns
 rm_blankr <- function(x) {
   x[rowSums(is.na(x)) != ncol(x), ]
 }
 
-df_srft <- rm_blankr(df_srft)
-
-# Remove columns with empty values in all rows
 rm_blankc <- function(x) {
   x[, colSums(is.na(x)) != nrow(x)]
 }
 
-df_srft <- rm_blankc(df_srft)
-
-df_srft <- map_dfc(df_srft, ~ ifelse(is.character(.) & . %in% na_list, NA, .))
+df_srft <- df_srft %>% rm_blankr() %>% rm_blankc()
 
 # Set columns classes
 df_srft$admission_date <- as.Date(df_srft$admission_date, format = "%d/%m/%Y")
@@ -79,42 +74,42 @@ df_srft$discharge_loc <- str_replace(df_srft$discharge_loc, "^hdu$", "ccu")
 df_srft$anaesthesia <- sapply(strsplit(df_srft$anaesthesia, ",\\s"), `[`, 1)
 
 df_srft$surgeon <- gsub("/", ",", df_srft$surgeon, fixed = TRUE)
-df_srft[df_srft$surgeon == "bilal khaffaf",]$surgeon <- "bilal alkhaffaf"
+df_srft$surgeon <-  gsub("bilal khaffaf", "bilal alkhaffaf", df_srft$surgeon)
 
-df_srft[df_srft$area_surgery == "urology",]$area_surgery <- "urology and endocrinology"
-df_srft[df_srft$area_surgery == "nephrology",]$area_surgery <- "urology and endocrinology"
-df_srft[df_srft$area_surgery == "endocrinology",]$area_surgery <- "urology and endocrinology"
-df_srft[df_srft$area_surgery == "head and neck",]$area_surgery <- "other"
+df_srft$area_surgery <- replace(df_srft$area_surgery, df_srft$area_surgery == "urology", "urology and endocrinology")
+df_srft$area_surgery <- replace(df_srft$area_surgery, df_srft$area_surgery == "nephrology", "urology and endocrinology")
+df_srft$area_surgery <- replace(df_srft$area_surgery, df_srft$area_surgery == "endocrinology", "urology and endocrinology")
+df_srft$area_surgery <- replace(df_srft$area_surgery, df_srft$area_surgery == "head and neck", "other")
 
-df_srft[df_srft$surgery == "adrenalectomy (unilateral)",]$surgery <- "adrenalectomy"
-df_srft[df_srft$surgery == "anterior resection of rectum",]$surgery <- "anterior resection"
-df_srft[df_srft$surgery == "cystoscopy, stents laparotomy, adhesiolysis, small bowel resection, formation of ileostomy, abdominal wall reconstruction",]$surgery <- "abdominal wall reconstruction"
-df_srft[df_srft$surgery == "gastrectomy (partial / total) with excision of surrounding tissue",]$surgery <- "gastrectomy (total or partial) with excision of surrounding tissue"
-df_srft[df_srft$surgery == "ileo-caecal resection (with anastamosis or ileostomy formation)",]$surgery <- "ileocaecal resection"
-df_srft[df_srft$surgery == "laparoscopic left hemicolectomy",]$surgery <- "left hemicolectomy (with anastomosis /colostomy)"
-df_srft[df_srft$surgery == "laparoscopic left nephrectomy +/- open",]$surgery <- "nephrectomy (non-transplant)"
-df_srft[df_srft$surgery == "left hemicolectomy (with colostomy)",]$surgery <- "left hemicolectomy (with anastomosis /colostomy)"
-df_srft[df_srft$surgery == "left radical laparoscopic nephrectomy",]$surgery <- "nephrectomy (non-transplant)"
-df_srft[df_srft$surgery == "nephrectomy and excision of perirenal tissue",]$surgery <- "nephrectomy (non-transplant)"
-df_srft[df_srft$surgery == "oesophagectomy",]$surgery <- "oesophagectomy (partial /total)/oesophagogastrectomy"
-df_srft[df_srft$surgery == "oesophagectomy (total)/oesophagogastrectomy",]$surgery <- "oesophagectomy (partial /total)/oesophagogastrectomy"
-df_srft[df_srft$surgery == "open gastrectomy",]$surgery <- "gastrectomy (partial / total) with excision of
-surrounding tissue"
-df_srft[df_srft$surgery == "laparoscopic right radical nephrectomy",]$surgery <- "nephrectomy (non-transplant)"
-df_srft[df_srft$surgery == "open partial nephrectomy",]$surgery <- "nephrectomy (non-transplant)"
-df_srft[df_srft$surgery == "open right adrenalectomy",]$surgery <- "adrenalectomy"
-df_srft[df_srft$surgery == "open right radical nephrectomy with lymphadenectomy",]$surgery <- "nephrectomy (non-transplant)"
-df_srft[df_srft$surgery == "partial gastrectomy (+/- excision of surrounding tissue)",]$surgery <- "gastrectomy (partial / total) with excision of
-surrounding tissue"
-df_srft[df_srft$surgery == "right adrenalectomy",]$surgery <- "adrenalectomy"
-df_srft[df_srft$surgery == "right hemicolectomy (with ileostomy)",]$surgery <- "right hemicolectomy (with anastomosis /colostomy)"
-df_srft[df_srft$surgery == "subtotal gastrectomy",]$surgery <- "gastrectomy (partial / total) with excision of
-surrounding tissue"
-df_srft[df_srft$surgery == "gastrectomy (total or partial) with excision of surrounding tissue",]$surgery <- "gastrectomy (partial / total) with excision of
-surrounding tissue"
+df_srft$surgery <- replace(df_srft$surgery, df_srft$surgery == "adrenalectomy (unilateral)", "adrenalectomy")
+df_srft$surgery <- replace(df_srft$surgery, df_srft$surgery == "anterior resection of rectum", "anterior resection")
+df_srft$surgery <- replace(df_srft$surgery, df_srft$surgery == "cystoscopy, stents laparotomy, adhesiolysis, small bowel resection, formation of ileostomy, abdominal wall reconstruction", "abdominal wall reconstruction")
+df_srft$surgery <- replace(df_srft$surgery, df_srft$surgery == "gastrectomy (partial / total) with excision of surrounding tissue", "gastrectomy (total or partial) with excision of surrounding tissue")
+df_srft$surgery <- replace(df_srft$surgery, df_srft$surgery == "ileo-caecal resection (with anastamosis or ileostomy formation)", "ileocaecal resection")
+df_srft$surgery <- replace(df_srft$surgery, df_srft$surgery == "laparoscopic left hemicolectomy", "left hemicolectomy (with anastomosis /colostomy)")
+df_srft$surgery <- replace(df_srft$surgery, df_srft$surgery == "laparoscopic left nephrectomy +/- open", "nephrectomy (non-transplant)")
+df_srft$surgery <- replace(df_srft$surgery, df_srft$surgery == "left hemicolectomy (with colostomy)", "left hemicolectomy (with anastomosis /colostomy)")
+df_srft$surgery <- replace(df_srft$surgery, df_srft$surgery == "left radical laparoscopic nephrectomy", "nephrectomy (non-transplant)")
+df_srft$surgery <- replace(df_srft$surgery, df_srft$surgery == "nephrectomy and excision of perirenal tissue", "nephrectomy (non-transplant)")
+df_srft$surgery <- replace(df_srft$surgery, df_srft$surgery == "oesophagectomy", "oesophagectomy (partial /total)/oesophagogastrectomy")
+df_srft$surgery <- replace(df_srft$surgery, df_srft$surgery == "oesophagectomy (total)/oesophagogastrectomy", "oesophagectomy (partial /total)/oesophagogastrectomy")
+df_srft$surgery <- replace(df_srft$surgery, df_srft$surgery == "open gastrectomy", "gastrectomy (partial / total) with excision of
+surrounding tissue")
+df_srft$surgery <- replace(df_srft$surgery, df_srft$surgery == "laparoscopic right radical nephrectomy", "nephrectomy (non-transplant)")
+df_srft$surgery <- replace(df_srft$surgery, df_srft$surgery == "open partial nephrectomy", "nephrectomy (non-transplant)")
+df_srft$surgery <- replace(df_srft$surgery, df_srft$surgery == "open right adrenalectomy", "adrenalectomy")
+df_srft$surgery <- replace(df_srft$surgery, df_srft$surgery == "open right radical nephrectomy with lymphadenectomy", "nephrectomy (non-transplant)")
+df_srft$surgery <- replace(df_srft$surgery, df_srft$surgery == "partial gastrectomy (+/- excision of surrounding tissue)", "gastrectomy (partial / total) with excision of
+surrounding tissue")
+df_srft$surgery <- replace(df_srft$surgery, df_srft$surgery == "right adrenalectomy", "adrenalectomy")
+df_srft$surgery <- replace(df_srft$surgery, df_srft$surgery == "right hemicolectomy (with ileostomy)", "right hemicolectomy (with anastomosis /colostomy)")
+df_srft$surgery <- replace(df_srft$surgery, df_srft$surgery == "subtotal gastrectomy", "gastrectomy (partial / total) with excision of
+surrounding tissue")
+df_srft$surgery <- replace(df_srft$surgery, df_srft$surgery == "gastrectomy (total or partial) with excision of surrounding tissue", "gastrectomy (partial / total) with excision of
+surrounding tissue")
+df_srft$surgery <- replace(df_srft$surgery, df_srft$surgery == "right hemicolectomy (with anastamosis)", "right hemicolectomy (with anastomosis /colostomy)")
+
 df_srft$surgery <- sub("\\\n", " ", df_srft$surgery)
-df_srft[df_srft$surgery == "right hemicolectomy (with anastamosis)",]$surgery <- "right hemicolectomy (with anastomosis /colostomy)"
-
 df_srft$gastro <- ifelse(!is.na(df_srft$gastro) & df_srft$gastro == "experienced nausea, vomiting or distension, unable to tolerate enteral diet", "unable to tolerate enteral diet, experienced nausea, vomiting or distension", df_srft$gastro)
 
 # 3 Transform --------------------------------------------------------------

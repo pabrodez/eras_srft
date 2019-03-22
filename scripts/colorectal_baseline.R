@@ -10,7 +10,6 @@ library(survminer)
 library(survMisc)
 library(stringr)
 library(ggthemes)
-library(plotly)
 
 # Source haelo_dashboard.R ------------------------------------------------
 source("./scripts/haelo_dashboard.R", echo = FALSE)
@@ -70,7 +69,8 @@ colorectal_merged <- colorectal_merged %>% mutate(
 
 # 4 Plot ----------------------------------------------------------------
 # Merged: Number of patients by month
-colorectal_merged %>% group_by(month_adm) %>% 
+npts_plot <- colorectal_merged %>%
+  group_by(month_adm) %>%
   summarise(n = n(), baseline = if_else(any(baseline == "yes"), "yes", "no")) %>%
   {
     ggplot(., aes(x = month_adm, y = n, group = baseline, colour = baseline)) +
@@ -82,7 +82,7 @@ colorectal_merged %>% group_by(month_adm) %>%
   }
 
 # Merged: Mean and median of length of stay grouped by month of discharge
-colorectal_merged %>%
+mean_med_plot <- colorectal_merged %>%
   select(month_dis, los, baseline) %>%
   group_by(month_dis) %>%
   summarise(
@@ -107,10 +107,10 @@ colorectal_merged %>%
         breaks = seq(0, max(.$value), 5)
       ) +
       geom_segment(aes(x = "2018-03", xend = "2018-03", y = 20, yend = 15),
-                   arrow = arrow(length = unit(0.03, "npc"))
+        arrow = arrow(length = unit(0.03, "npc"))
       ) +
       geom_segment(aes(x = "2018-07", xend = "2018-07", y = 20, yend = 15),
-                   arrow = arrow(length = unit(0.03, "npc"))
+        arrow = arrow(length = unit(0.03, "npc"))
       ) +
       annotate("text", x = "2018-04", y = 21, label = "Gap") +
       facet_wrap(vars(summary), ncol = 1) +
@@ -119,7 +119,7 @@ colorectal_merged %>%
   }
 
 # Merged: Box plot LoS by month
-colorectal_merged %>%
+boxplot_plot <- colorectal_merged %>%
   select(month_dis, los, baseline) %>%
   na.omit() %>%
   {
@@ -137,13 +137,14 @@ colorectal_merged %>%
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
   }
 
-# Merged: Histogram LoS by month
+# Merged: Histogram LoS
 colorectal_merged %>%
   select(month_dis, los, baseline) %>%
   na.omit() %>%
   {
-    ggplot(.) +
-      geom_histogram(aes(x = los), binwidth = 1, colour = "grey") +
+    ggplot(., aes(x = los, fill = baseline)) +
+      geom_histogram(data = filter(., baseline == "yes"), binwidth = 1, alpha = 0.5) +
+      geom_histogram(data = filter(., baseline == "no"), binwidth = 1, alpha = 0.5) +
       scale_x_continuous(
         limits = c(0, 100),
         breaks = seq(min(.$los), max(.$los), 4)
@@ -152,9 +153,53 @@ colorectal_merged %>%
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
   }
 
-# Day of week admission and LoS
-colorectal_merged %>%
+# Same as above but in proportions
+los_foo1 <- colorectal_merged %>%
+  select(los, baseline) %>%
+  na.omit() %>%
+  filter(baseline == "yes") %>%
+  group_by(los) %>%
+  summarise(n = n()) %>%
+  mutate(prop = n / sum(n))
+
+los_foo2 <- colorectal_merged %>%
+  select(los, baseline) %>%
+  na.omit() %>%
+  filter(baseline == "no") %>%
+  group_by(los) %>%
+  summarise(n = n()) %>%
+  mutate(prop = n / sum(n))
+
+fill_los <- c("Yes" = "#f4bf42", "No" = "#41a9f4")
+
+los_hist_prop <- ggplot(data = los_foo1, aes(x = los, y = prop)) +
+  geom_bar(alpha = 0.3, stat = "identity", aes(fill = "Yes")) +
+  geom_bar(data = los_foo2, alpha = 0.3, stat = "identity", aes(fill = "No")) +
+  coord_cartesian(xlim = c(0, 96)) +
+  scale_fill_manual(values = fill_los, name = "baseline") +
+  theme_fivethirtyeight() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Day of week admission and median LoS
+wday_los_raster <- colorectal_merged %>%
   select(admission_date, los, baseline) %>%
-  mutate(adm_wday = lubridate::wday(admission_date, week_start = 1, label = TRUE))
-  
-  
+  mutate(adm_wday = lubridate::wday(admission_date, week_start = 1, label = TRUE)) %>%
+  group_by(adm_wday, baseline) %>%
+  mutate(med = median(los, na.rm = TRUE), n = n()) %>%
+  ggplot(aes(x = adm_wday, y = baseline, fill = med)) +
+  geom_raster() +
+  geom_text(aes(label = sprintf("Pts:%s\nMed:%s", n, med))) +
+  theme_fivethirtyeight()
+
+# Day of week admission and LoS boxplots
+wday_los_box <- colorectal_merged %>%
+  select(admission_date, los, baseline) %>%
+  mutate(adm_wday = lubridate::wday(admission_date, week_start = 1, label = TRUE)) %>% 
+  group_by(adm_wday) %>% 
+  ggplot() +
+  geom_boxplot(aes(x = adm_wday, y = los, colour = baseline)) +
+  scale_y_continuous(breaks = function(y) seq(min(y), max(y), 10),
+                     limits = c(0, 200)) +
+  coord_cartesian(ylim = c(0, 200)) +
+  theme_fivethirtyeight()
+
