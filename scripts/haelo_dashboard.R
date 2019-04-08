@@ -144,9 +144,9 @@ df_haelo <-
 
 # 4 Haelo measures ----------------------------------------------------------------
 # 1.4.1 Patients that attended Surgery School
-count_surgery <- function(data, time_group) {
-  dplyr::select(data, area_surgery, surgery_school, chest_physio, week_start, month_surgery) %>%
-    group_by(!!time_group) %>%
+count_surgery <- function(data) {
+  dplyr::select(data, area_surgery, surgery_school, chest_physio, week_start) %>%
+    group_by(week_start) %>%
     summarise(
       n_patients = n(),
       school_n = sum(
@@ -158,11 +158,11 @@ count_surgery <- function(data, time_group) {
 }
 
 # 1.4.2 Number of readmissions within 30 days by month of discharge
-count_readm <- function(data, time_group = discharge_my) {
+count_readm <- function(data) {
   data %>%
-    select(discharge_my, area_surgery, readmit_30) %>%
-    filter(!is.na(!! time_group)) %>% 
-    group_by(!! time_group) %>%
+    select(discharge_my, readmit_30) %>%
+    filter(!is.na(discharge_my)) %>% 
+    group_by(discharge_my) %>%
     summarise(
       n_patients = n(), ## number of pts discharged that month
       readmit_na = sum(is.na(readmit_30)), ## number of patients for whom 30 days after discharge haven't passed
@@ -171,9 +171,9 @@ count_readm <- function(data, time_group = discharge_my) {
 }
 
 # 1.4.3 Number of patients with Postoperative Pulmonary Complication by week of surgery
-count_ppc <- function(data, time_group = week_start) {
-  dplyr::select(data, week_start, infec_7, pulm_supp_7, area_surgery, month_surgery) %>%
-    group_by(!! time_group) %>%
+count_ppc <- function(data) {
+  dplyr::select(week_start, infec_7, pulm_supp_7) %>%
+    group_by(week_start) %>%
     summarise(
       n_patients = n(),
       patients_ppc = sum(infec_7 == "chest" |
@@ -183,15 +183,16 @@ count_ppc <- function(data, time_group = week_start) {
 }
 
 # 1.4.4 Average Length of Stay grouped by month of discharge
-avg_los <- function(data, time_group = discharge_my) {
+avg_los <- function(data) {
   data %>%
-    select(discharge_my, hospital_stay, area_surgery) %>%
-    filter(!is.na(!! time_group)) %>%
-    group_by(!! time_group) %>%
+    select(discharge_my, hospital_stay) %>%
+    filter(!is.na(discharge_my)) %>%
+    group_by(discharge_my) %>%
     summarise(
       y = mean(hospital_stay, na.rm = TRUE),
       n_patients = n()
-    )
+    ) %>% 
+    ungroup()
 }
 
 # 1.4.5 Satisfaction score
@@ -205,10 +206,10 @@ foo_satis %>%
   summarise(n = n())
 
 # 1.4.6 Number of patients compliant with iCough bundle
-count_icough <- function(data, time_group = week_start) {
-  dplyr::select(data, area_surgery, week_start, nas_columns, compliant, month_surgery) %>%
+count_icough <- function(data) {
+  dplyr::select(week_start, nas_columns, compliant) %>%
     filter(nas_columns != 5) %>% ## Remove pts without all 5 items recorded
-    group_by(!! time_group) %>%
+    group_by(week_start) %>%
     summarise(
       n_patients = n(),
       n_compliant = sum(compliant == "yes", na.rm = TRUE),
@@ -217,10 +218,10 @@ count_icough <- function(data, time_group = week_start) {
 }
 
 # 1.4.7 Number of patients that had their teeth brushed twice
-count_tbrush <- function(data, time_group = week_start) {
-  dplyr::select(data, area_surgery, week_start, t_brushes, nas_columns, month_surgery) %>%
+count_tbrush <- function(data) {
+  dplyr::select(data, week_start, t_brushes, nas_columns) %>%
     filter(nas_columns != 5) %>%
-    group_by(!! time_group) %>%
+    group_by(week_start) %>%
     summarise(
       n_patients = n(),
       n_tbrushes = sum(t_brushes, na.rm = TRUE),
@@ -230,10 +231,10 @@ count_tbrush <- function(data, time_group = week_start) {
 }
 
 # 1.4.8 Number of patients mobilised
-count_mob <- function(data, time_group = week_start) {
-  dplyr::select(data, area_surgery, week_start, mobilised, nas_columns, month_surgery) %>%
+count_mob <- function(data) {
+  dplyr::select(week_start, mobilised, nas_columns) %>%
     filter(nas_columns != 5) %>%
-    group_by(!! time_group) %>%
+    group_by(week_start) %>%
     summarise(
       n_patients = n(),
       n_mob = sum(mobilised, na.rm = TRUE),
@@ -243,10 +244,10 @@ count_mob <- function(data, time_group = week_start) {
 }
 
 # 1.4.9 Number of patients that used incentive spirometer
-count_spiro <- function(data, time_group = week_start) {
-  dplyr::select(data, area_surgery, week_start, inc_spiro, nas_columns, month_surgery) %>%
+count_spiro <- function(data) {
+  dplyr::select(week_start, inc_spiro, nas_columns) %>%
     filter(nas_columns != 5) %>%
-    group_by(!! time_group) %>%
+    group_by(week_start) %>%
     summarise(
       n_patients = n(),
       n_is = sum(inc_spiro, na.rm = TRUE),
@@ -256,10 +257,10 @@ count_spiro <- function(data, time_group = week_start) {
 }
 
 # 1.4.10 Number of patients that used mouth wash twice
-count_mwash <- function(data, time_group = week_start) {
-  dplyr::select(data, area_surgery, week_start, m_washes, nas_columns, month_surgery) %>%
+count_mwash <- function(data) {
+  dplyr::select(week_start, m_washes, nas_columns) %>%
     filter(nas_columns != 5) %>%
-    group_by(!! time_group) %>%
+    group_by(week_start) %>%
     summarise(
       n_patients = n(),
       n_mwash = sum(m_washes, na.rm = TRUE),
@@ -269,10 +270,10 @@ count_mwash <- function(data, time_group = week_start) {
 }
 
 # 1.4.11 Number of patients who re-started oral diet
-count_diet <- function(data, time_group = week_start) {
-  dplyr::select(data, area_surgery, week_start, oral_diet, nas_columns, month_surgery) %>%
+count_diet <- function(data) {
+  dplyr::select(week_start, oral_diet, nas_columns) %>%
     filter(nas_columns != 5) %>%
-    group_by(!!time_group) %>%
+    group_by(week_start) %>%
     summarise(
       n_patients = n(),
       n_diet = sum(oral_diet, na.rm = TRUE),
@@ -292,3 +293,7 @@ print_measure <- function(data, measure_fun, area = "all", time = week_start) {
     measure_fun(data = df, time_group = group)
   }
 }
+
+avg_los(df_haelo) %>% reshape(., idvar = c("y", "n_patients"), 
+                              timevar = "discharge_my", 
+                              direction = "wide")
