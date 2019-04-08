@@ -1,5 +1,6 @@
 ---
 title: "ERAS+ measures by specialty"
+date: "`r Sys.Date()`"
 output: 
   flexdashboard::flex_dashboard:
     orientation: rows
